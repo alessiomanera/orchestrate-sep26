@@ -87,3 +87,46 @@ Answers are spread across every class, so a degenerate constant-output baseline 
 2. `earliest_date_for_full_payment` measures capacity, not preference. Per `problem_statement.md` it can
    equal `request_date` even when the recommendation is `installments`, because the user declined full
    payment. Deriving it from the chosen recommendation loses that column.
+
+## What ships and what does not
+
+Three categories, not two. The transcript is the one that catches people out: it is
+deliberately kept out of git, but it is still handed to the organizers.
+
+### Committed and submitted, public
+
+```
+AGENTS.md  CLAUDE.md  README.md  problem_statement.md   organizer files, never edited
+dataset/                                                organizer data, never modified
+code/                                                   the solution, including log_entry.py
+NOTES.md                                                this file
+.gitignore  .env.example                                config templates, no secret values
+output.csv                                              generated predictions, the deliverable
+```
+
+### Submitted but never committed
+
+```
+log.txt        the graded chat transcript, gitignored so it stays out of the public
+               repo, uploaded to the organizers separately
+code.zip       rebuilt on demand from the tracked files
+```
+
+### Never leaves the machine
+
+```
+.env           real provider keys
+.venv/         local interpreter
+.cache/        cached model extractions
+```
+
+Everything in the third group is gitignored. Verify with `git ls-files --others
+--exclude-standard`, which should list nothing but files intended for the repo.
+
+### Before submitting
+
+```bash
+python code/log_entry.py verify      # transcript carries no credential or private term
+git ls-files | grep -iE "\.env$|log\.txt"   # must return nothing
+git status --porcelain                       # must be clean
+```
