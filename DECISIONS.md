@@ -811,3 +811,115 @@ actually submit, rather than against the working tree.
 reproduce the evidence layer, and the provider's free tier caps 20 requests per day per
 model. The cache is therefore not an optimisation, it is what makes the reported token
 figures reproducible. It is deliberately not committed, being machine-local.
+
+---
+
+## D15. What the measurements taught, with the evidence for each
+
+**Date:** 2026-09-12
+**Status:** standing. This is the method the rest of this log was produced by.
+
+Not a summary of what was built. Four things that changed how work is done here, each with
+the measurement that forced the change.
+
+### 1. A principle held against a known cost is an untested hypothesis
+
+D11 kept the percentage-amendment rule because silent evidence loss is the worse failure,
+recorded that it cost `request_16`, noted its reach was 4 users of 275, and flagged it for
+reversal. That is a defensible position and it was still a guess.
+
+D12 ran it as an experiment: the same scorer twice, application off versus on, nothing else
+changed, decision rule written down first.
+
+| | Applied | Not applied |
+|---|---:|---:|
+| `amount_safe_to_pay` | 4.0% | 8.0% |
+| `affordability_status` | 60.0% | 64.0% |
+| `recommended_payment_method` | 64.0% | 68.0% |
+| `earliest_date_for_full_payment` | 48.0% | 52.0% |
+| Overall | 48.7% | **51.3%** |
+
+Better on four columns, worse on none. The principle was not wrong about the rent rising,
+it was wrong about what a forecast is for. **Reporting a fact and incorporating it into a
+projection are different acts, and only the second has to earn its accuracy.** The parser
+and the report stayed; the application went. The run still names every notice it declines
+to act on, by message id, so the failure the principle guarded against is still closed.
+
+The general form: when a judgment call has a measurable cost, the cost is the argument.
+Write the decision rule down before the run so the result cannot be talked around, which
+is the same discipline D7 used to make a negative result stick.
+
+### 2. Instructions about the data were wrong three times, and the data said so each time
+
+Each of these arrived as a confident statement from the person directing the work. Each was
+checked against the repo before being acted on, which is the only reason they were caught.
+
+| Stated | Established | How |
+|---|---|---|
+| "For wait and not_recommended, none" | `wait` carries a single full payment on `earliest_date_for_full_payment` | Read all 6 `wait` rows in `sample_requests.csv`. Every one does, with no exceptions |
+| "usage_report.md is currently empty" | It was 53 lines of measured figures naming the two models that actually answered | Opened the file before rewriting it |
+| "Group on amount similarity, cadence, direction and category" | That merges a fixed base salary with an irregular bonus in the same `salary` category | Implemented it, measured it: `request_03`, `_04`, `_11` and `_13` moved out by 1.6 to 2.7 months of recurring spend |
+
+A fourth, from this log rather than from a person: D10 concluded that zero of the ten
+misclassified rows were classifier logic errors. D11's measurement overturned it.
+`request_08`, `_11`, `_21` and `_22` now have troughs within 0.03, 0.03, 0.09 and 0.00
+months of the organizers' own and are still misclassified, so the error is in the
+classifier after all. **Our own prior conclusions get re-measured, not inherited.**
+
+A fifth, a warning that did not materialise: "`payment_plan` depends on
+`amount_safe_to_pay` at 4 percent, so partial payments will mostly be wrong on the amount."
+Measured: **zero** of the 9 wrong plan rows fail on the amount. Only `partial_payment`
+reads that column and it appears once in 25 rows, where the method was already wrong for an
+unrelated reason. A plausible worry is not a finding either.
+
+The rule this produced: **before implementing a column, read that column's ground-truth
+values, not the specification of it.** Two of the five plan rules and the money format
+differ from the natural reading of the brief, and reading 18 rows took four minutes.
+
+### 3. A new measuring instrument must agree with the old one before it is trusted
+
+Choosing the income rule meant comparing twelve variants. The first attempt reimplemented
+the trough comparison in a quick script. Its numbers disagreed with
+`diagnose_trough.py` on rows whose values were already known: `request_08` came out at
+-1.01 where the established diagnostic said +0.03, and `request_10` at +2.40 against -0.24.
+
+The cheap reading was that the new script was fine and the old numbers were stale. The
+disagreement was real: the quick script skipped the evidence layer and normalised by a
+different denominator. It was thrown away and the sweep was driven through
+`diagnose_trough.py` itself as a subprocess, twelve times.
+
+**A measurement that disagrees with an established one is a bug in one of them until
+proven otherwise, and the new one is the more likely suspect.** Had that been waved
+through, the winning rule would have been chosen on numbers that meant nothing.
+
+### 4. Reach before fit, and the packaging path is code
+
+The standing rule to measure a change's reach across all 275 users before adopting it,
+rather than its effect on the 25 solved rows, is what produced every defensible number in
+D11: 58 users projecting no income at all, 90 series recovered by the threshold, 41
+excluded by cadence, 99 of 101 income cancellations legitimately from an employer. It also
+killed two changes that fitted the sample and would not have survived a hidden 250.
+
+Applied earlier it would have caught more. The description-in-the-key heuristic was
+justified by a single user, `user_10`, and had anyone measured what that user actually
+projected they would have found the rule was not protecting it at all: it was manufacturing
+a 16-day salary the user does not have, the largest single component of that row's error.
+**A rule justified by one example has been tested on one example.**
+
+The same held for the submission path, which was reasoned about for two sessions and run
+for the first time in the third. The first real build silently shipped an archive missing a
+test file written minutes earlier, because `code.zip` is assembled from `git ls-files` and
+an untracked file is omitted rather than rejected. Nothing in the output said so. A gate
+now fails on it. **An unexecuted path is an untested path, whether or not it contains
+logic.**
+
+### What would be done differently from the start
+
+1. Read the ground truth for a column before writing the code that produces it.
+2. Measure a rule's dataset-wide reach before adopting it, not after it is questioned.
+3. Run the packaging and submission path on day one, when it is cheap to be wrong.
+4. Write the falsification criterion before the experiment, every time, as D7 did.
+5. Treat a plausible story about a failure as a hypothesis. Both long stalls in this build
+   ended when the actual error was read instead of the one that fitted the last incident:
+   a 45-second timeout tuned for single documents was throttling 25-document batches and
+   looked exactly like the quota failure that had happened an hour earlier.

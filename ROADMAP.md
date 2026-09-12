@@ -1,11 +1,122 @@
 # ROADMAP
 
+## HANDOFF, read this first
+
+Written 2026-09-12 ~21:30 IST for a session with no memory of the one that wrote it.
+Deadline 2026-09-13T18:00:00+05:30, about 20.5 hours out. Everything below is measured, not
+remembered: re-run `.venv\Scripts\python.exe code/evaluation/main.py` to reproduce it.
+
+### Score, fresh run against the 25 solved rows
+
+| Column | Score | State |
+|---|---:|---|
+| `amount_safe_to_pay` | 8.0% | live, and close to its ceiling (see D7) |
+| `affordability_status` | 64.0% | live |
+| `recommended_payment_method` | 68.0% | live |
+| `payment_plan` | 64.0% | live |
+| `earliest_date_for_full_payment` | 52.0% | live |
+| `spending_changes_needed` | 88.0% | **placeholder**, constant `none` |
+| **Overall** | **57.3%** | |
+
+`decision_explanation` is 100% non-empty and is not scored for correctness.
+
+### What is finished, what is not
+
+- **Finished:** deterministic financial core (state reconstruction, 90-day forecast, monthly
+  income recurrence), the evidence layer over 16 images and 215 messages, the eligibility
+  filter and plan ranking, the affordability classifier, and the `payment_plan` grammar.
+- **Placeholder:** `spending_changes_needed` returns a constant `none`. It scores 88% because
+  22 of 25 ground-truth rows genuinely are `none`. Real headroom is 12 points on one column.
+- **Known-broken:** nothing is broken. 29 tests pass, all 8 submission gates pass, the run is
+  deterministic, and `output.csv` is byte-identical across runs.
+- **Known-limited:** `image_04` is genuinely unreadable to the vision model and is left blank,
+  never zeroed. That is correct behaviour, not a bug.
+
+### The single highest-value next block
+
+**`recommended_payment_method`, currently 68%.** It is worth roughly five times the
+alternative because it pays twice: of the 9 rows where `payment_plan` is wrong, **8 are wrong
+only because the method is wrong**, and the plan rendered is the correct plan for the method
+chosen. Fixing the 8 method errors moves two columns at once, up to about 10 points overall.
+Compare `spending_changes_needed`, the only remaining placeholder, which is capped at about 2
+points overall because the constant `none` is already right 22 times in 25.
+
+Start in `code/planning.py::classify`, not in the forecast. D11 established that the forecast
+error moved into the classifier: `request_08`, `_11`, `_21` and `_22` are still misclassified
+while their troughs sit within 0.03, 0.03, 0.09 and 0.00 months of the organizers' own. Their
+arithmetic is right and their answer is wrong, so the remaining error is decision logic.
+
+**Do not spend more time on `amount_safe_to_pay`.** D7 tested the one hypothesis for closing
+it and falsified it. 21 of its 25 ground-truth values are arbitrary continuous numbers that
+require reproducing the organizers' arithmetic to the unit.
+
+### Open questions and unexplained rows
+
+- **`request_05` is unexplained and should stay that way until someone measures it.** Its
+  trough falls early, at day 7, yet it is out by +2.26 months of recurring spend: we project a
+  dip of about 4,000 where the organizers project about 32,600, with no pending or scheduled
+  rows involved and three salary credits projected inside the horizon. It does not fit the
+  late-trough story that explained every other large error. No mechanism has been established.
+  An honest unexplained row is better interview material than an invented cause.
+- **Why the organizers do not apply a stated rent increase.** Four messages say rent rises 12%.
+  Applying it measurably degrades four columns (D12), so we parse it, report it, and do not
+  apply it. Why their forecast ignores a fact their own dataset states is unresolved.
+- **`request_19` picks installments where the truth is `partial_payment`**, the only
+  `partial_payment` row in the sample. Cost ranking says the split is cheaper; something in
+  the eligibility or ranking path disagrees.
+
+### Traps already hit and solved. Do not rediscover these.
+
+1. **Free tier is 20 requests per day per model, and it is per model.** The last extraction run
+   spent 13 successful calls (9 on `gemini-3.6-flash`, 4 on `gemini-3.7-flash`) plus some
+   failed attempts that also consume quota; the configured head `gemini-3.8-flash` was already
+   exhausted and the run fell down the chain. **You do not need any of it.** All 231 documents
+   are in `.cache/` keyed by content hash, so a full run makes **zero live calls**. Do not
+   re-run extraction to "refresh" anything: it costs quota, and it would change the token
+   figures in `evaluation/usage_report.md`, which must describe the graded run.
+2. **A failure that looks like a quota failure may not be one.** After batching landed, every
+   batch came back empty and "quota again" was the obvious reading. It was wrong: a 45-second
+   request timeout, tuned when a call was one small document, was cutting off 25-document
+   batches that were working, and each timeout triggered a retry that spent more quota. A
+   timeout tuned for one call shape is wrong for another. Read the actual error before
+   accepting the story that fits the most recent incident.
+3. **`code.zip` is built from `git ls-files`, so an untracked source file is silently omitted,
+   not rejected.** The first dress rehearsal shipped an archive missing a test file written
+   minutes earlier, with nothing in the output to say so. A gate now fails the build on any
+   untracked file under `code/`. **Commit before packaging.**
+4. **Non-ASCII in source crashes on a cp1252 console.** A stray CJK glyph in a
+   `diagnose_trough.py` header string made the diagnostic die with a `UnicodeEncodeError` that
+   looked like a data problem. Keep source ASCII.
+5. **Two output columns format money differently.** `payment_plan` writes 996.6 as `996.60`;
+   `amount_safe_to_pay` strips trailing zeros in the same file (`17229139.2`, `603.3`).
+   Assuming they match costs four rows.
+6. **Never push `upstream`.** It is the organizers' remote and is `no_push`. `origin` is the
+   private backup and is safe.
+
+### Before you submit
+
+```
+.venv\Scripts\python.exe code/package_submission.py --check   # 8 gates
+.venv\Scripts\python.exe code/package_submission.py           # builds code.zip
+.venv\Scripts\python.exe code/log_entry.py verify             # transcript leak scan
+```
+
+Submit `code.zip`, `output.csv`, and `log.txt` as the chat transcript, to
+https://www.hackerrank.com/contests/hackerrank-orchestrate-september26/challenges/buy-or-wait/submission
+
+`log.txt` is gitignored but **is** submitted. Never edit it by hand; append only through
+`code/log_entry.py`, which applies redaction and the required LF endings.
+
+---
+
 Buy or Wait?, HackerRank Orchestrate. Deadline: 2026-09-13T18:00:00+05:30 (AGENTS.md section 3).
-As of this writing: 2026-09-12 ~20:30 IST, about 21.5 hours left.
 
 Tasks and future ideas live here, never in README.md.
 
-## 1. Current state
+## 1. Score history
+
+How the columns moved, oldest first. **Current numbers are in the HANDOFF above; this
+table is the progression, kept as evidence of what each step actually bought.**
 
 Verified by running `python code/evaluation/main.py` against the 25 solved rows in
 `dataset/sample_requests.csv`.
