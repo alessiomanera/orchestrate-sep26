@@ -59,7 +59,7 @@ _circuit_open = False
 # (input_tokens, output_tokens) of the most recent live call, so a batched
 # caller can attribute usage across the documents that call covered.
 _LAST_USAGE: tuple[int, int] = (0, 0)
-_LAST_FAILURE_WAS_QUOTA = False
+_LAST_FAILURE_WAS_UNAVAILABLE = False
 
 # The free tier's 20-requests-per-day cap is per model, so an exhausted model
 # does not mean an exhausted key. When the configured model is out of quota the
@@ -271,11 +271,11 @@ def _call_with_retry(
     (.agents/AGENTS.md, bounded execution). Records the call in LEDGER whenever
     the provider actually answered, so the usage report counts wasted tokens too.
     """
-    global _consecutive_failures, _circuit_open, _LAST_USAGE, _LAST_FAILURE_WAS_QUOTA
+    global _consecutive_failures, _circuit_open, _LAST_USAGE, _LAST_FAILURE_WAS_UNAVAILABLE
 
     if _circuit_open:
         return None
-    _LAST_FAILURE_WAS_QUOTA = False
+    _LAST_FAILURE_WAS_UNAVAILABLE = False
 
     payload = {
         "systemInstruction": {"parts": [{"text": system_instruction}]},
@@ -296,8 +296,11 @@ def _call_with_retry(
             last_error = f"{type(exc).__name__}: {exc}"
             if attempt == MAX_ATTEMPTS - 1:
                 break
-            if isinstance(exc, urllib.error.HTTPError) and exc.code == 429:
-                _LAST_FAILURE_WAS_QUOTA = True
+            # 429 is an exhausted quota, 503 is a model under load. Both mean
+            # this model cannot serve this batch, and both are answered by
+            # moving to a sibling rather than by losing the batch.
+            if isinstance(exc, urllib.error.HTTPError) and exc.code in (429, 503):
+                _LAST_FAILURE_WAS_UNAVAILABLE = True
             throttled = isinstance(exc, urllib.error.HTTPError) and exc.code in (429, 500, 503)
             base = THROTTLE_BACKOFF_BASE_SECONDS if throttled else BACKOFF_BASE_SECONDS
             time.sleep(base * (2**attempt))
@@ -452,15 +455,15 @@ def generate_json_batch(
                 parts=parts,
                 response_schema=batch_schema,
             )
-            if parsed is not None or not _LAST_FAILURE_WAS_QUOTA:
+            if parsed is not None or not _LAST_FAILURE_WAS_UNAVAILABLE:
                 break
             chain_index += 1
             _consecutive_failures = 0
             _circuit_open = False
             if chain_index < len(chain):
                 print(
-                    f"  [model fallback] {active_model} is out of quota; "
-                    f"continuing on {chain[chain_index]}"
+                    f"  [model fallback] {active_model} is unavailable "
+                    f"(quota or load); continuing on {chain[chain_index]}"
                 )
 
         if parsed is None:
