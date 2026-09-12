@@ -1,0 +1,21 @@
+# Mandatory chat transcript (AGENTS.md §2) - submitted separately, never committed
+log.txt
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+
+# Local caches for LLM extraction results
+.cache/
+
+# Submission bundle (rebuilt on demand)
+code.zip
+
+# Private prep material and local agent rules (this clone is public)
+_PERSONAL/
+.agents/
+.env.*
