@@ -29,7 +29,11 @@ from pathlib import Path
 
 DEADLINE = datetime(2026, 9, 13, 18, 0, 0, tzinfo=timezone(timedelta(hours=5, minutes=30)))
 
-# Key shapes scrubbed unconditionally, regardless of .env configuration.
+# Any .env variable whose name matches this has its VALUE scrubbed from the log,
+# whatever format the provider uses. This is the reliable half of the defence.
+SECRET_NAME = re.compile(r"KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL", re.IGNORECASE)
+
+# Shape matching is the backstop, for keys that never passed through .env.
 SECRET_PATTERNS = [
     (re.compile(r"AIza[0-9A-Za-z_\-]{30,}"), "[REDACTED_API_KEY]"),
     (re.compile(r"sk-ant-[0-9A-Za-z_\-]{20,}"), "[REDACTED_API_KEY]"),
@@ -47,20 +51,41 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def load_redactions(root: Path) -> list[str]:
-    """Read TRANSCRIPT_REDACT from .env. Longest first so nested paths scrub cleanly."""
+def load_env(root: Path) -> dict[str, str]:
+    """Minimal .env reader. No dependency, no export syntax, no interpolation."""
+    values: dict[str, str] = {}
     env = root / ".env"
-    raw = ""
-    if env.is_file():
-        for line in env.read_text(encoding="utf-8").splitlines():
-            stripped = line.strip()
-            if stripped.startswith("TRANSCRIPT_REDACT="):
-                raw = stripped.split("=", 1)[1].strip().strip('"').strip("'")
-    terms: set[str] = set()
-    for term in (t.strip() for t in raw.split(",")):
-        if len(term) < 3:
+    if not env.is_file():
+        return values
+    for line in env.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
             continue
-        terms.add(term)
+        name, value = stripped.split("=", 1)
+        values[name.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def load_redactions(root: Path) -> list[str]:
+    """Terms to scrub: the TRANSCRIPT_REDACT list plus every real secret value in .env.
+
+    Redacting the actual values matters more than matching key shapes. Providers
+    invent new key formats, and a shape-based regex silently misses them.
+    """
+    env = load_env(root)
+    terms: set[str] = set()
+
+    for term in (t.strip() for t in env.get("TRANSCRIPT_REDACT", "").split(",")):
+        if len(term) >= 3:
+            terms.add(term)
+
+    for name, value in env.items():
+        if name == "TRANSCRIPT_REDACT":
+            continue
+        if SECRET_NAME.search(name) and len(value) >= 8:
+            terms.add(value)
+
+    for term in list(terms):
         terms.add(term.replace("\\", "/"))
         terms.add(term.replace("/", "\\"))
     return sorted(terms, key=len, reverse=True)

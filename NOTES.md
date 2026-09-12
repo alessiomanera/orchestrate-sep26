@@ -125,8 +125,14 @@ Everything in the third group is gitignored. Verify with `git ls-files --others
 
 ### Before submitting
 
+One command runs every gate and builds the bundle:
+
 ```bash
-python code/log_entry.py verify      # transcript carries no credential or private term
-git ls-files | grep -iE "\.env$|log\.txt"   # must return nothing
-git status --porcelain                       # must be clean
+python code/package_submission.py            # gates, then build code.zip
+python code/package_submission.py --check    # gates only
 ```
+
+It builds `code.zip` from `git ls-files`, so an ignored file cannot enter the archive
+even by mistake. The gates check that no private file is tracked, that the transcript
+passes its leak scan, that `evaluation/usage_report.md` exists, and that `output.csv`
+has the exact column order and one row per request in the dataset's own order.
