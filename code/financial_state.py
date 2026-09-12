@@ -68,6 +68,8 @@ from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 
+from evidence import EMPTY_EVIDENCE, Evidence, MessageFact
+
 FORECAST_HORIZON_DAYS = 90
 
 # Recurrence detection tolerances.
@@ -118,7 +120,9 @@ class CashEvent:
 
     event_date: date
     amount: float  # signed: positive credit, negative debit
-    source: str  # "ledger:<event_id>" or "recurring:<category>:<description>"
+    source: str  # "ledger:<event_id>", "recurring:<key>" or "evidence:<message_id>"
+    event_id: str | None = None       # set for rows that came from the ledger
+    series: str | None = None         # "debit" or "credit" for projected recurring rows
 
 
 @dataclass
@@ -191,6 +195,20 @@ def _convert(amount: float, from_currency: str, to_currency: str, on_date: str) 
 # ---------------------------------------------------------------------------
 
 
+def _row_amount(row: dict, evidence: "Evidence") -> tuple[float, str] | None:
+    """(amount, currency) for a ledger row, or None if it is still unknown.
+
+    A blank amount is resolved from the linked document image when the evidence
+    layer read one. If it did not, the row stays unknown and every caller skips
+    it: a blank is never silently treated as zero (AGENTS.md section 6.1).
+    """
+    raw = row["amount"].strip()
+    if raw:
+        return float(raw), row["currency"]
+    resolved = evidence.amount_by_event_id.get(row["event_id"])
+    return resolved if resolved else None
+
+
 def _detect_recurring_events(
     history: list[dict],
     home_currency: str,
@@ -198,6 +216,7 @@ def _detect_recurring_events(
     horizon_end: date,
     explicit_dates_by_series: dict[tuple[str, ...], list[date]],
     incomplete_event_ids: list[str],
+    evidence: "Evidence",
 ) -> list[CashEvent]:
     """Project recurring essential cash flows forward from settled history.
 
@@ -231,12 +250,12 @@ def _detect_recurring_events(
 
         dated_amounts: list[tuple[date, float]] = []
         for row in rows:
-            if row["amount"].strip() == "":
+            resolved = _row_amount(row, evidence)
+            if resolved is None:
                 incomplete_event_ids.append(row["event_id"])
                 continue
-            amount = _convert(
-                float(row["amount"]), row["currency"], home_currency, row["settlement_date"]
-            )
+            raw_amount, currency = resolved
+            amount = _convert(raw_amount, currency, home_currency, row["settlement_date"])
             dated_amounts.append((_parse_date(row["event_date"]), amount))
         if len(dated_amounts) < MIN_OCCURRENCES_FOR_RECURRENCE:
             continue
@@ -265,11 +284,163 @@ def _detect_recurring_events(
                 abs((next_date - explicit).days) <= DEDUP_WINDOW_DAYS for explicit in explicit_dates
             ):
                 projected.append(
-                    CashEvent(next_date, signed_amount, f"recurring:{':'.join(key)}")
+                    CashEvent(
+                        next_date,
+                        signed_amount,
+                        f"recurring:{':'.join(key)}",
+                        series=direction,
+                    )
                 )
             next_date += timedelta(days=median_gap)
 
     return projected
+
+
+# ---------------------------------------------------------------------------
+# Evidence application
+#
+# The extracted facts do not overwrite the ledger. They are applied here, in
+# the conflict order problem_statement.md specifies: an explicit cancellation,
+# settlement or amendment first, then the newer record from the same source,
+# then a settled event over an estimate, then the financially safer reading.
+# ---------------------------------------------------------------------------
+
+# An explicit change outranks a confirmation, which outranks nothing at all.
+FACT_PRIORITY = {"cancel": 0, "amend": 0, "delay": 0, "confirm": 1, "clarify": 1, "irrelevant": 2}
+
+
+def _fact_order(fact: "MessageFact") -> tuple[int, date]:
+    """Sort key. Lower tier applies first; inside a tier, older applies first so
+    the newest record from the same source is the one left standing."""
+    return (FACT_PRIORITY.get(fact.kind, 2), fact.sent_on)
+
+
+def _fact_amount_in_home(
+    amount: float | None, fact: "MessageFact", home_currency: str, on_date: date
+) -> float | None:
+    """Convert a message's stated amount into the home currency.
+
+    Returns None if the message quotes a foreign currency for which the fixed
+    rate table has no row on that date. A missing rate is never interpolated or
+    assumed: the fact is simply dropped, which leaves the forecast exactly as it
+    was without the message.
+    """
+    if amount is None:
+        return None
+    currency = (fact.currency or home_currency).strip().upper() or home_currency
+    if currency == home_currency:
+        return amount
+    try:
+        return _convert(amount, currency, home_currency, on_date.isoformat())
+    except KeyError:
+        return None
+
+
+def _apply_message_facts(
+    facts: list["MessageFact"],
+    events: list[CashEvent],
+    as_of_date: date,
+    horizon_end: date,
+    home_currency: str,
+) -> list[CashEvent]:
+    """Fold message evidence into the forecast. Returns the revised event list.
+
+    Every operation is conservative in the same direction the challenge rules
+    are: money is only added to the forecast when the message says it is
+    confirmed, and money is removed whenever a message says a flow has stopped.
+    """
+    events = list(events)
+
+    for fact in sorted(facts, key=_fact_order):
+        effective = fact.effective_date or as_of_date
+
+        # --- a recurring flow changes or stops -----------------------------
+        if fact.target in ("recurring_income", "recurring_expense"):
+            wanted = "credit" if fact.target == "recurring_income" else "debit"
+            matching = [e for e in events if e.series == wanted and e.event_date >= effective]
+
+            if fact.kind == "cancel":
+                # The flow has ended. Stop projecting it from the effective date.
+                events = [e for e in events if not (e.series == wanted and e.event_date >= effective)]
+
+            elif fact.kind == "amend":
+                new_amount = _fact_amount_in_home(
+                    fact.new_recurring_amount, fact, home_currency, effective
+                )
+                if new_amount is not None:
+                    if matching:
+                        signed = new_amount if wanted == "credit" else -new_amount
+                        for event in matching:
+                            event.amount = signed
+                            event.source = f"{event.source}+{fact.message_id}"
+                    elif wanted == "credit" and fact.money_is_confirmed_cash:
+                        # No detected series to amend. One confirmed credit is
+                        # counted, but a recurring series is never manufactured
+                        # from a single message.
+                        if fact.effective_date and as_of_date < fact.effective_date <= horizon_end:
+                            events.append(
+                                CashEvent(
+                                    fact.effective_date,
+                                    new_amount,
+                                    f"evidence:{fact.message_id}",
+                                    series="credit",
+                                )
+                            )
+
+        # --- one specific ledger row is cancelled, delayed or corrected ----
+        elif fact.target == "related_event" and fact.related_event_id:
+            target_id = fact.related_event_id
+            if fact.kind == "cancel":
+                events = [e for e in events if e.event_id != target_id]
+            elif fact.kind == "delay" and fact.effective_date:
+                for event in events:
+                    if event.event_id == target_id:
+                        if fact.effective_date <= horizon_end:
+                            event.event_date = fact.effective_date
+                        else:
+                            events = [e for e in events if e.event_id != target_id]
+                            break
+            elif fact.kind == "amend":
+                revised = _fact_amount_in_home(
+                    fact.new_recurring_amount or fact.one_time_amount, fact, home_currency, effective
+                )
+                if revised is not None:
+                    for event in events:
+                        if event.event_id == target_id:
+                            event.amount = revised if event.amount >= 0 else -revised
+            elif not fact.money_is_confirmed_cash:
+                # A credit the message says has not actually arrived is removed.
+                # A debit is left alone: dropping an obligation would be the
+                # unsafe direction.
+                events = [
+                    e for e in events if not (e.event_id == target_id and e.amount > 0)
+                ]
+
+        # --- an extra one-off payment named by the message ------------------
+        one_off = _fact_amount_in_home(fact.one_time_amount, fact, home_currency, effective)
+        if one_off is not None and fact.one_time_direction in ("credit", "debit"):
+            is_credit = fact.one_time_direction == "credit"
+            # A credit needs a stated date and explicit confirmation before it
+            # is counted (AGENTS.md 6.3: nothing uncertain counts as cash). A
+            # debit still needs a stated date, because inventing one would put
+            # the obligation at an arbitrary point in the forecast.
+            dated = fact.effective_date
+            if dated and as_of_date < dated <= horizon_end and (not is_credit or fact.money_is_confirmed_cash):
+                already = any(
+                    abs((e.event_date - dated).days) <= DEDUP_WINDOW_DAYS
+                    and abs(abs(e.amount) - one_off) < 0.01
+                    for e in events
+                )
+                if not already:
+                    events.append(
+                        CashEvent(
+                            dated,
+                            one_off if is_credit else -one_off,
+                            f"evidence:{fact.message_id}",
+                        )
+                    )
+
+    return sorted(events, key=lambda e: e.event_date)
 
 
 # ---------------------------------------------------------------------------
@@ -278,9 +449,17 @@ def _detect_recurring_events(
 
 
 def reconstruct_state(
-    user_id: str, as_of_date: date, horizon_days: int = FORECAST_HORIZON_DAYS
+    user_id: str,
+    as_of_date: date,
+    horizon_days: int = FORECAST_HORIZON_DAYS,
+    evidence: Evidence = EMPTY_EVIDENCE,
 ) -> FinancialState:
-    """Reconstruct user_id's cash position and 90-day forecast as of as_of_date."""
+    """Reconstruct user_id's cash position and 90-day forecast as of as_of_date.
+
+    evidence defaults to empty so the forecast stays runnable and testable with
+    no network and no API key; passing a populated Evidence adds the image and
+    message layer on top of the same deterministic arithmetic.
+    """
     profile = _load_profiles()[user_id]
     home_currency = profile["home_currency"]
     horizon_end = as_of_date + timedelta(days=horizon_days)
@@ -303,13 +482,17 @@ def reconstruct_state(
         if status == "pending" and direction == "credit":
             continue  # not counted until settled, per AGENTS.md section 6.3
 
-        if row["amount"].strip() == "":
+        resolved = _row_amount(row, evidence)
+        if resolved is None:
             incomplete_event_ids.append(row["event_id"])
             continue
 
-        amount = _convert(float(row["amount"]), row["currency"], home_currency, row["settlement_date"])
+        raw_amount, currency = resolved
+        amount = _convert(raw_amount, currency, home_currency, row["settlement_date"])
         signed = amount if direction == "credit" else -amount
-        explicit_events.append(CashEvent(settlement, signed, f"ledger:{row['event_id']}"))
+        explicit_events.append(
+            CashEvent(settlement, signed, f"ledger:{row['event_id']}", event_id=row["event_id"])
+        )
 
         is_recurring_type = (direction == "debit" and row["event_type"] in DEBIT_RECURRING_TYPES) or (
             direction == "credit" and row["event_type"] in CREDIT_RECURRING_TYPES
@@ -319,7 +502,21 @@ def reconstruct_state(
             explicit_dates_by_series.setdefault(key, []).append(settlement)
 
     recurring_events = _detect_recurring_events(
-        history, home_currency, as_of_date, horizon_end, explicit_dates_by_series, incomplete_event_ids
+        history,
+        home_currency,
+        as_of_date,
+        horizon_end,
+        explicit_dates_by_series,
+        incomplete_event_ids,
+        evidence,
+    )
+
+    forecast_events = _apply_message_facts(
+        evidence.for_user(user_id),
+        explicit_events + recurring_events,
+        as_of_date,
+        horizon_end,
+        home_currency,
     )
 
     return FinancialState(
@@ -328,7 +525,7 @@ def reconstruct_state(
         home_currency=home_currency,
         current_available_balance=float(profile["current_available_balance"]),
         minimum_balance_to_keep=float(profile["minimum_balance_to_keep"]),
-        forecast_events=sorted(explicit_events + recurring_events, key=lambda e: e.event_date),
+        forecast_events=forecast_events,
         incomplete_event_ids=sorted(set(incomplete_event_ids)),
     )
 

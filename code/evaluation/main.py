@@ -66,6 +66,43 @@ def amounts_match(expected: str, actual: str) -> bool:
     return diff <= AMOUNT_ABS_TOLERANCE or diff <= AMOUNT_REL_TOLERANCE * max(abs(e), abs(a))
 
 
+def _report_amount_error_split(
+    expected: dict[str, dict[str, str]], predicted: dict[str, dict[str, str]]
+) -> None:
+    """Direction of the error on amount_safe_to_pay, not just its hit rate.
+
+    Exact-match percentage says how often we are right; it says nothing about
+    how we are wrong. A one-sided split means a systematically missing or
+    double-counted obligation. A balanced split means errors in both directions
+    at once, which needs a different explanation. This is the diagnostic the
+    evidence-layer decision was made on (DECISIONS.md, D2), so it is reported
+    on every run rather than reconstructed by hand when it is needed.
+    """
+    too_high = too_low = exact = 0
+    for request_id, expected_row in expected.items():
+        predicted_row = predicted.get(request_id, {})
+        try:
+            difference = float(predicted_row.get(NUMERIC_TOLERANCE_COLUMN, "")) - float(
+                expected_row.get(NUMERIC_TOLERANCE_COLUMN, "")
+            )
+        except ValueError:
+            continue
+        if abs(difference) <= AMOUNT_ABS_TOLERANCE:
+            exact += 1
+        elif difference > 0:
+            too_high += 1
+        else:
+            too_low += 1
+
+    scored = too_high + too_low + exact
+    skew = abs(too_high - too_low) / scored if scored else 0.0
+    print(
+        f"\n  {NUMERIC_TOLERANCE_COLUMN} error direction: "
+        f"{too_high} too high, {too_low} too low, {exact} exact "
+        f"(skew {skew:.0%}; 0% is perfectly symmetric)"
+    )
+
+
 def main() -> int:
     root = repo_root()
 
@@ -110,6 +147,8 @@ def main() -> int:
         f"  {NON_EMPTY_ONLY_COLUMN:<28} {non_empty:>3}/{total}  ({pct_non_empty:5.1f}%)"
         "  non-empty only, not scored for correctness"
     )
+
+    _report_amount_error_split(expected, predicted)
 
     overall_matched = sum(column_matches.values())
     overall_total = len(scored_columns) * total

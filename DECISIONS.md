@@ -148,3 +148,67 @@ describe a run that never happened.
 **Consequence for the usage report.** Token counts are recorded per call at the moment of the
 call and accumulate in the cache, so the report describes measured reality even though a re-run
 spends nothing. Re-runs are free and the reported figures stay reproducible.
+
+---
+
+## D6. Batch the evidence layer, and fall forward through sibling models
+
+**Date:** 2026-09-12
+**Status:** in force
+
+**What forced it.** The first live run failed with HTTP 429 after ten calls. The error body named
+the quota exactly:
+
+```
+Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests,
+limit: 20, model: gemini-3.8-flash
+quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier
+```
+
+Twenty `generateContent` requests per day, per model, per project. The evidence layer needs to
+read 231 documents. One call per document was not slow, it was impossible, and no amount of
+retrying or backoff could change that. This is why the diagnosis mattered more than the
+symptom: the first two runs were killed after stalling in exponential backoff against a wall
+that backoff cannot clear.
+
+**Decision, part one: batch.** Documents are grouped into a single call, 25 messages or 4 images
+at a time, and the model returns a `results` array. That turns 231 requests into about 13, which
+fits inside a single model's daily allowance with room to spare.
+
+Each item carries an id, and results are matched back by that id rather than by position. A
+dropped or reordered element therefore cannot silently shift every later answer onto the wrong
+document; an unmatched id is simply absent, and its row degrades to "no evidence".
+
+Per-item caching is preserved: each document's result is still written to its own content-hash
+entry. Batching is a property of how calls are made, not of what is stored, so changing the
+batch size later reuses every document already read.
+
+**Decision, part two: a model fallback chain.** The cap is per model, so an exhausted model is
+not an exhausted key. On a 429 the run moves to the next model in an explicit, deterministic
+chain (`gemini-3.7-flash`, then `-3.6`, `-3.5`, `gemini-2.5-flash`), overridable with
+`MODEL_FALLBACKS`, and retries the same batch. An exhausted model costs one wasted call rather
+than the whole surface.
+
+Cache entries are keyed by the model that actually answered, and a hit under any model in the
+chain counts as already-read. A later run on a recovered primary model therefore spends nothing
+re-reading documents that a substitute already resolved.
+
+**Alternatives rejected.**
+
+1. *Wait for the daily quota to reset.* Rejected as the primary plan: the reset time is not
+   stated in the error, the submission deadline is fixed, and betting the main correction on an
+   unobservable clock is not a plan. Batching makes the reset irrelevant rather than load-bearing.
+2. *Switch to the Anthropic key already present in `.env`.* Rejected for now. It is a second
+   provider, a second cost model and a second set of behaviours to validate, for a problem that a
+   50-line batching change solves on the provider already chosen and already verified to read
+   these documents correctly.
+3. *Silently change the configured model to one with quota left.* Rejected. The configured model
+   is a recorded project decision. A fallback chain that starts at the configured model and is
+   visible in the log is honest about what actually answered; quietly editing `.env` would have
+   made the usage report describe a run nobody chose.
+
+**Consequences.** Cost per run drops by roughly an order of magnitude, because 231 system-prompt
+copies collapse into 13. The usage report must now attribute a batch's tokens across its
+documents, which it does evenly and says so. And the mixed-model possibility is real: a run can
+legitimately be answered by more than one model, so the usage report groups by model rather than
+assuming one.

@@ -4,10 +4,11 @@ Reads dataset/requests.csv, writes output.csv at the repo root with one row
 per request in the required column order.
 
 amount_safe_to_pay and earliest_date_for_full_payment come from the
-deterministic 90-day forecast in code/financial_state.py. The remaining four
-columns (affordability_status, recommended_payment_method, payment_plan,
-spending_changes_needed) are still a safe placeholder: eligibility and plan
-ranking have not been built yet.
+deterministic 90-day forecast in code/financial_state.py, corrected by the
+evidence layer in code/evidence.py (the 16 document images and the 215
+messages). The remaining four columns (affordability_status,
+recommended_payment_method, payment_plan, spending_changes_needed) are still a
+safe placeholder: eligibility and plan ranking have not been built yet.
 
 Usage:
     python code/main.py              # dataset/requests.csv -> output.csv
@@ -26,9 +27,11 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
+from evidence import EMPTY_EVIDENCE, Evidence, collect_evidence
 from financial_state import amount_safe_to_pay as compute_amount_safe_to_pay
 from financial_state import earliest_date_for_full_payment as compute_earliest_date
 from financial_state import reconstruct_state
+from usage import write_usage_report
 
 REQUIRED_COLUMNS = [
     "request_id",
@@ -74,13 +77,13 @@ def read_requests(path: Path) -> list[dict]:
         return list(reader)
 
 
-def predict(request: dict) -> dict:
+def predict(request: dict, evidence: Evidence) -> dict:
     """amount_safe_to_pay and earliest_date_for_full_payment from the 90-day
     forecast; every other column is still the safe placeholder.
     """
     request_date = datetime.strptime(request["request_date"], "%Y-%m-%d").date()
     requested_amount = float(request["requested_amount"])
-    state = reconstruct_state(request["user_id"], request_date)
+    state = reconstruct_state(request["user_id"], request_date, evidence=evidence)
 
     safe_amount = compute_amount_safe_to_pay(state, requested_amount)
     earliest = compute_earliest_date(state, requested_amount)
@@ -93,12 +96,12 @@ def predict(request: dict) -> dict:
     }
 
 
-def write_output(path: Path, requests: list[dict]) -> None:
+def write_output(path: Path, requests: list[dict], evidence: Evidence) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=REQUIRED_COLUMNS)
         writer.writeheader()
         for request in requests:
-            writer.writerow(predict(request))
+            writer.writerow(predict(request, evidence))
 
 
 def main() -> int:
@@ -107,6 +110,11 @@ def main() -> int:
         "--sample",
         action="store_true",
         help="run against dataset/sample_requests.csv instead of dataset/requests.csv",
+    )
+    parser.add_argument(
+        "--no-evidence",
+        action="store_true",
+        help="skip the image and message layer (ablation: forecast from the ledger alone)",
     )
     args = parser.parse_args()
 
@@ -118,11 +126,18 @@ def main() -> int:
         input_path = root / "dataset" / "requests.csv"
         output_path = root / "output.csv"
 
+    evidence = EMPTY_EVIDENCE if args.no_evidence else collect_evidence()
+
     requests = read_requests(input_path)
-    write_output(output_path, requests)
+    write_output(output_path, requests, evidence)
 
     print(f"read {len(requests)} request(s) from {input_path}")
     print(f"wrote {output_path}")
+
+    # The usage report must describe the graded full-dataset run, so a --sample
+    # run never overwrites it with 25-row figures.
+    if not args.no_evidence and not args.sample:
+        print(f"wrote {write_usage_report(len(requests))}")
     return 0
 
 
