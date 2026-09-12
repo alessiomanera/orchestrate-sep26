@@ -62,36 +62,54 @@ What is still placeholder: `affordability_status`, `recommended_payment_method`,
 `spending_changes_needed`. No eligibility filter, no plan ranking, no spending-change selection,
 no LLM calls, no usage report content.
 
-## 2. Remaining steps, in dependency order
+## 2. Remaining steps, revised order
+
+Reordered on 2026-09-12 after measuring the error split on `amount_safe_to_pay`: 12 rows too
+high, 12 too low, 1 exact. Symmetric error cannot come from a single missing expense rule, and
+the evidence layer is the only input that can push a forecast in both directions. It therefore
+moves ahead of eligibility and ranking rather than sitting at the end. Full reasoning and the
+falsification criterion are in DECISIONS.md, entry D2.
 
 | # | Step | Produces | Moves | Est. | Blocked by |
 |---|---|---|---|---|---|
-| 1 | Eligibility filter: match `payment_methods_user_will_consider`, `max_installment_months`, `allows_partial_payment` against `request_payment_options.csv` | list of safe, eligible plans per request | affordability_status, recommended_payment_method | 1.5h | financial_state.py (done) |
-| 2 | Plan ranking: apply the 6-tier order (complete by deadline, no spending changes, minimize total paid, start earlier, fewer payments, lowest payment_option_id) | chosen plan | recommended_payment_method, payment_plan, affordability_status | 2.5h | Step 1 |
-| 3 | Spending-changes selection: pick up to 3 stop/reduce actions from willing-to-reduce/stop categories, respecting protected categories and minimum_allowed_amount, mutually exclusive stop vs reduce per event | spending change list | spending_changes_needed, affordability_with_plan cases | 1.5h | Step 2 |
-| 4 | Wire 1-3 into main.py, derive decision_explanation from the real inputs (grounded, short, cites real events/dates) | full non-LLM pipeline | decision_explanation quality | 1h | Steps 1-3 |
-| 5 | Re-run self-scoring harness, debug against the 25 samples | updated score table | all 6 columns | 1.5h | Step 4 |
-| 6 | Blank-amount resolution: Gemini vision over the 16 linked images, cached to disk by content hash | resolved amounts, incomplete flag cleared | amount_safe_to_pay, earliest_date_for_full_payment for ~16 affected users | 2h | none (independent of 1-5) |
-| 7 | Message extraction: Gemini text over 215 messages, apply the conflict-resolution order (cancellation/settlement/amendment, then newer same-source record, then settled over estimate, then safer interpretation) | amended/clarified facts | amount_safe_to_pay, earliest_date_for_full_payment, decision_explanation | 2.5h | none (independent of 1-5) |
-| 8 | Integrate steps 6-7 outputs back into financial_state, re-run self-scoring, debug | updated score table | all 6 columns, again | 1.5h | Steps 5, 6, 7 |
-| 9 | Token/cost tracking on both LLM call sites, write evaluation/usage_report.md from the real run | required deliverable | none directly, submission gate | 1h | Steps 6, 7 |
-| 10 | Full 250-row run to output.csv, validate contract (`package_submission.py --check`) | output.csv | submission gate | 0.5h | Step 8 |
-| 11 | README run instructions, final code.zip build, submission gates | code.zip | submission gate | 1h | Step 10 |
-| 12 | Buffer for the unknowns steps 1-11 will surface | - | - | 2h | - |
+| 1 | Evidence layer: vision over the 16 linked images, text classification over the 215 messages, both cached by content hash, applied through the conflict-resolution order | resolved blank amounts, amended/cancelled/delayed facts | amount_safe_to_pay, earliest_date_for_full_payment | 4h | none |
+| 2 | Eligibility filter and plan ranking: match payment preferences, `max_installment_months` and `allows_partial_payment` against `request_payment_options.csv`, then apply the 6-tier ranking | chosen plan | affordability_status, recommended_payment_method | 3.5h | Step 1 |
+| 3 | Payment plan emission and spending-change selection: the `YYYY-MM-DD:amount` grammar, and up to 3 stop/reduce actions respecting protected categories and `minimum_allowed_amount` | plan string, change list | payment_plan, spending_changes_needed | 2.5h | Step 2 |
+| 4 | Unit tests, ARCHITECTURE.md, code/README.md | code-zip quality evidence | code zip score (30 pts) | 2h | Step 3 |
+| 5 | Cost tracking rollup and `evaluation/usage_report.md` from the measured run | required deliverable | submission gate | 1h | Step 1 |
+| 6 | DECISIONS.md completion and judge-interview prep | interview answers | interview score (30 pts) | 1.5h | Steps 1-5 |
+| 7 | Full 250-row run, contract validation, code.zip build | output.csv, code.zip | submission gates | 1h | Steps 3, 5 |
+| 8 | Rest block | - | - | 1.5h | - |
+| 9 | Buffer | - | - | 2h | - |
 
-Total estimated work: 18.5h.
+Total estimated work: 19h against 21h remaining.
+
+### Why this order and not the score-greedy one
+
+The challenge is scored out of 100: chat transcript 10, judge interview 30, output CSV 30, code
+zip 30. Seventy of those points are not the CSV. Steps 4 and 6 are therefore not housekeeping to
+be done if time allows; they carry as many points as every output column combined, and they are
+far less contested than the CSV, where the live leaderboard tops out near 50.
+
+Within the CSV's own 30 points, `amount_safe_to_pay` is the lowest-yield column: 21 of the 25
+ground-truth values are arbitrary continuous numbers and none are zero, so scoring it means
+reproducing the organizers' arithmetic to the unit. `affordability_status` and
+`recommended_payment_method` are close to a single column (only 6 distinct pairs across 25 rows,
+and three of those pairs are one-to-one), so step 2 buys two columns for one piece of logic.
+Step 1 comes first regardless, because every later column reads the forecast it corrects.
 
 ## 3. Time budget
 
-| Block | Hours | Runs until (IST, approx) |
-|---|---|---|
-| Remaining now | 21.5h | - |
-| Steps 1-12 above | 18.5h | - |
-| Rest block | 1.5h | - |
-| Submit buffer (floor) | 1.0h | - |
-| **Total planned** | **21.0h** | fits inside 21.5h with 0.5h slack |
+| Block | Hours |
+|---|---|
+| Remaining as of 2026-09-12 20:51 IST | 21.1h |
+| Steps 1-7 above (build) | 15.5h |
+| Step 8, rest block | 1.5h |
+| Step 9, buffer | 2.0h |
+| Submit floor, packaging already counted in step 7 | 1.0h |
+| Total planned | 20.0h, fits inside 21.1h with 1.1h slack |
 
-Rule: stop new work and start Step 11 (packaging) the moment 2 hours remain before the
+Rule: stop new work and start Step 7 (packaging) the moment 2 hours remain before the
 deadline, whatever step is in progress. Partial credit on a working pipeline beats a better
 pipeline that never gets zipped.
 
