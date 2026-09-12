@@ -10,69 +10,52 @@ Tasks and future ideas live here, never in README.md.
 Verified by running `python code/evaluation/main.py` against the 25 solved rows in
 `dataset/sample_requests.csv`.
 
-Baseline before this session's work (walking skeleton, every column a safe placeholder):
+| Column | Skeleton | Forecast | Forecast + evidence | Status |
+|---|---|---|---|---|
+| amount_safe_to_pay | 0.0% | 4.0% | **4.0%** | live, unchanged by evidence |
+| affordability_status | 28.0% | 28.0% | **28.0%** | placeholder |
+| recommended_payment_method | 28.0% | 28.0% | **28.0%** | placeholder |
+| payment_plan | 28.0% | 28.0% | **28.0%** | placeholder |
+| earliest_date_for_full_payment | 28.0% | 32.0% | **36.0%** | live, +4.0 from evidence |
+| spending_changes_needed | 88.0% | 88.0% | **88.0%** | placeholder |
+| **Overall (6 scored columns)** | **33.3%** | **34.7%** | **35.3%** | |
 
-| Column | Score |
-|---|---|
-| amount_safe_to_pay | 0.0% |
-| affordability_status | 28.0% |
-| recommended_payment_method | 28.0% |
-| payment_plan | 28.0% |
-| earliest_date_for_full_payment | 28.0% |
-| spending_changes_needed | 88.0% |
-| decision_explanation | 100.0% non-empty (not scored for correctness) |
-| **Overall (6 scored columns)** | **33.3%** |
+`decision_explanation` is 100% non-empty and not scored for correctness.
 
-After this session (`code/financial_state.py`, the deterministic 90-day forecast, wired into
-`code/main.py` for two columns only):
+The evidence layer is built and applied: 215 of 215 messages classified, 15 of 16 blank amounts
+resolved from their linked images. The 16th (`image_04`) was returned as unreadable by the vision
+model and is correctly left blank rather than zeroed.
 
-| Column | Score | Change |
-|---|---|---|
-| amount_safe_to_pay | 4.0% | moved off 0%, as expected |
-| affordability_status | 28.0% | unchanged, still placeholder |
-| recommended_payment_method | 28.0% | unchanged, still placeholder |
-| payment_plan | 28.0% | unchanged, still placeholder |
-| earliest_date_for_full_payment | 32.0% | moved, as expected |
-| spending_changes_needed | 88.0% | unchanged, still placeholder |
-| **Overall (6 scored columns)** | **34.7%** | +1.4 points |
+### The evidence-layer experiment failed, and that is the useful finding
 
-The exact-match rate on the two live columns is low (4%, 32%) even though the model is now
-structurally sound. Two real bugs were found and fixed by direct data inspection during the
-build, not by tuning against the sample answers:
+The error on `amount_safe_to_pay` was 12 rows too high, 12 too low, 1 exact. After applying every
+message and image it is **still 12 too high, 12 too low, 1 exact**. The hypothesis that the
+symmetric error came from ignored message evidence is falsified. Full result, including the check
+that the layer is genuinely connected (it moves 4 rows, improving 2 and worsening 2), is in
+DECISIONS.md entry D7.
 
-1. Recurring income was not detected at all. Fixed by adding the same cadence-consistency
-   detector to settled income, keeping description in the grouping key so genuine confirmed
-   salary (one employer, identical description every month, verified on `user_02`) is trusted
-   but rotating gig income (multiple named platforms under one `salary` category, verified on
-   `user_10`) is not.
-2. Recurring expenses were grouped by `(category, description)`, so any essential category
-   billed under a different description each time (groceries, transport, dining, verified
-   missing entirely for `user_10`) never reached the occurrence threshold and was invisible
-   to the forecast. Fixed by grouping debits by category alone.
-
-Fixing bug 2 made `user_10`'s numbers much more sensible (earliest date now correctly empty,
-matching the sample) but made `user_02`'s exact-match slightly worse (a more complete forecast
-pushed its earliest safe date later than the sample's). Reported here rather than reverted,
-per the standing rule not to tune quietly toward a better-looking number. The remaining gap is
-most likely the conservative-amount heuristic (max/min of the last 3 occurrences) not matching
-whatever formula produced the ground truth exactly. Candidate refinement, not committed to yet:
-see the amount-precision task below.
+Consequence for planning: stop investing in `amount_safe_to_pay`. Exact match on it requires
+reproducing the organizers' arithmetic to the unit across 21 arbitrary continuous values, and the
+one hypothesis for closing that gap has been tested and rejected. The discrete columns are where
+the remaining CSV points are.
 
 What is still placeholder: `affordability_status`, `recommended_payment_method`, `payment_plan`,
-`spending_changes_needed`. No eligibility filter, no plan ranking, no spending-change selection,
-no LLM calls, no usage report content.
+`spending_changes_needed`. No eligibility filter, no plan ranking, no spending-change selection.
 
 ## 2. Remaining steps, revised order
 
 Reordered on 2026-09-12 after measuring the error split on `amount_safe_to_pay`: 12 rows too
 high, 12 too low, 1 exact. Symmetric error cannot come from a single missing expense rule, and
 the evidence layer is the only input that can push a forecast in both directions. It therefore
-moves ahead of eligibility and ranking rather than sitting at the end. Full reasoning and the
-falsification criterion are in DECISIONS.md, entry D2.
+moved ahead of eligibility and ranking rather than sitting at the end.
+
+That experiment has now run and the hypothesis was falsified: the split is unchanged. Step 1 is
+complete and the evidence layer ships, but it is not the fix for that column. Reasoning in
+DECISIONS.md D2, result in D7.
 
 | # | Step | Produces | Moves | Est. | Blocked by |
 |---|---|---|---|---|---|
-| 1 | Evidence layer: vision over the 16 linked images, text classification over the 215 messages, both cached by content hash, applied through the conflict-resolution order | resolved blank amounts, amended/cancelled/delayed facts | amount_safe_to_pay, earliest_date_for_full_payment | 4h | none |
+| 1 | DONE. Evidence layer: vision over the 16 linked images, text classification over the 215 messages, both cached by content hash, applied through the conflict-resolution order | resolved blank amounts, amended/cancelled/delayed facts | amount_safe_to_pay, earliest_date_for_full_payment | 4h | none |
 | 2 | Eligibility filter and plan ranking: match payment preferences, `max_installment_months` and `allows_partial_payment` against `request_payment_options.csv`, then apply the 6-tier ranking | chosen plan | affordability_status, recommended_payment_method | 3.5h | Step 1 |
 | 3 | Payment plan emission and spending-change selection: the `YYYY-MM-DD:amount` grammar, and up to 3 stop/reduce actions respecting protected categories and `minimum_allowed_amount` | plan string, change list | payment_plan, spending_changes_needed | 2.5h | Step 2 |
 | 4 | Unit tests, ARCHITECTURE.md, code/README.md | code-zip quality evidence | code zip score (30 pts) | 2h | Step 3 |

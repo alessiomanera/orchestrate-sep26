@@ -131,6 +131,14 @@ class CallRecord:
     input_tokens: int
     output_tokens: int
     cached: bool            # served from .cache/, so it spent nothing this run
+    batch_size: int = 1     # documents that shared the call this record came from
+
+    @property
+    def call_share(self) -> float:
+        """This document's fraction of one API call. Summing these over a
+        surface gives the number of requests actually made, which is not the
+        number of documents once calls are batched."""
+        return 1.0 / max(self.batch_size, 1)
 
 
 @dataclass
@@ -397,6 +405,7 @@ def generate_json_batch(
                 input_tokens=hit.get("input_tokens", 0),
                 output_tokens=hit.get("output_tokens", 0),
                 cached=True,
+                batch_size=hit.get("batched_with", 1),
             )
         )
         if hit.get("parsed") is not None:

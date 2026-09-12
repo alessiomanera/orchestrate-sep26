@@ -26,14 +26,17 @@ from llm import (
 )
 
 
-def _by_surface() -> dict[str, dict]:
-    grouped: dict[str, dict] = {}
+def _by_surface_and_model() -> dict[tuple[str, str], dict]:
+    """Group by (surface, model). A run can legitimately span several models
+    when one hits its daily cap, so the report must not assume a single one."""
+    grouped: dict[tuple[str, str], dict] = {}
     for record in LEDGER.records:
         bucket = grouped.setdefault(
-            record.surface,
-            {"model": record.model, "calls": 0, "input_tokens": 0, "output_tokens": 0, "live": 0},
+            (record.surface, record.model),
+            {"documents": 0, "calls": 0.0, "input_tokens": 0, "output_tokens": 0, "live": 0},
         )
-        bucket["calls"] += 1
+        bucket["documents"] += 1
+        bucket["calls"] += record.call_share
         bucket["input_tokens"] += record.input_tokens
         bucket["output_tokens"] += record.output_tokens
         bucket["live"] += 0 if record.cached else 1
@@ -50,7 +53,9 @@ def write_usage_report(request_count: int = 250) -> Path:
     out_rate = float(os.environ.get("OUTPUT_USD_PER_MTOK", DEFAULT_OUTPUT_USD_PER_MTOK))
     total = LEDGER.totals()
     live = LEDGER.totals(only_live=True)
-    surfaces = _by_surface()
+    surfaces = _by_surface_and_model()
+    total_calls = round(sum(data["calls"] for data in surfaces.values()))
+    total_documents = sum(data["documents"] for data in surfaces.values())
 
     lines = [
         "# Usage report",
@@ -67,28 +72,50 @@ def write_usage_report(request_count: int = 250) -> Path:
         "images": "read the total from each linked document image",
         "messages": "classify each message into a typed financial fact",
     }
-    for surface, data in sorted(surfaces.items()):
+    for (surface, model_name), _ in sorted(surfaces.items()):
         lines.append(
-            f"| {surface} | {LEDGER.provider} | `{data['model']}` |"
+            f"| {surface} | {LEDGER.provider} | `{model_name}` |"
             f" {purpose.get(surface, 'extraction')} |"
         )
+    lines += [
+        "",
+        "More than one model can appear for a surface. The provider caps free-tier requests"
+        " per day per model, so a run that exhausts one model continues on the next in a"
+        " deterministic fallback chain. The report groups by the model that actually answered.",
+    ]
 
     lines += [
         "",
-        "## Calls and tokens",
+        "## Documents, calls and tokens",
         "",
-        "| Surface | Calls | Input tokens | Output tokens | Total |",
-        "|---|---:|---:|---:|---:|",
+        "Documents are the things read: 16 images and 215 messages. Calls are the requests"
+        " actually made, which is far smaller because documents are batched (25 messages or"
+        " 4 images per call).",
+        "",
+        "| Surface | Model | Documents | Calls | Input tokens | Output tokens | Total |",
+        "|---|---|---:|---:|---:|---:|---:|",
     ]
-    for surface, data in sorted(surfaces.items()):
+    for (surface, model_name), data in sorted(surfaces.items()):
         lines.append(
-            f"| {surface} | {data['calls']} | {data['input_tokens']:,} |"
-            f" {data['output_tokens']:,} | {data['input_tokens'] + data['output_tokens']:,} |"
+            f"| {surface} | `{model_name}` | {data['documents']} | {round(data['calls'])} |"
+            f" {data['input_tokens']:,} | {data['output_tokens']:,} |"
+            f" {data['input_tokens'] + data['output_tokens']:,} |"
         )
     lines.append(
-        f"| **total** | **{total['calls']}** | **{total['input_tokens']:,}** |"
-        f" **{total['output_tokens']:,}** | **{total['total_tokens']:,}** |"
+        f"| **total** | | **{total_documents}** | **{total_calls}** |"
+        f" **{total['input_tokens']:,}** | **{total['output_tokens']:,}** |"
+        f" **{total['total_tokens']:,}** |"
     )
+    lines += [
+        "",
+        "Batched calls report one token count for the whole batch, so each document's row"
+        " above carries an even share of its batch's tokens. The totals are exact; the"
+        " per-document split is an even attribution.",
+        "",
+        "Failed attempts (a model out of quota, or briefly unavailable) consume a request"
+        " against the provider's cap but return no usage metadata, so they cannot appear in"
+        " these token counts. The figures describe the calls that produced the results.",
+    ]
 
     per_request = total["total_tokens"] / max(request_count, 1)
     lines += [
@@ -98,12 +125,12 @@ def write_usage_report(request_count: int = 250) -> Path:
         f"- Requests in the graded run: **{request_count}**",
         f"- Total tokens: **{total['total_tokens']:,}**",
         f"- Average tokens per request: **{per_request:.1f}**",
-        f"- Average model calls per request: **{total['calls'] / max(request_count, 1):.2f}**",
+        f"- Model calls in the whole run: **{total_calls}**",
         "",
         "Model calls do not scale with the number of requests. Both surfaces are"
-        " dataset-sized, not request-sized: 16 images and 215 messages, one call each,"
-        " whatever the request count. The per-request figures above are therefore the"
-        " total divided across the run, not a per-row cost.",
+        " dataset-sized, not request-sized: 231 documents read once and cached, whatever the"
+        " request count. The per-request figures above are therefore the total divided across"
+        " the run, not a per-row cost, and they fall as the request count rises.",
         "",
         "## Estimated cost",
         "",
@@ -116,8 +143,8 @@ def write_usage_report(request_count: int = 250) -> Path:
         "",
         "## Cost of a re-run",
         "",
-        f"Live calls in this run: **{live['calls']}** of {total['calls']}"
-        f" ({total['calls'] - live['calls']} served from the content-hash cache)."
+        f"Documents read live in this run: **{live['calls']}** of {total_documents}"
+        f" ({total_documents - live['calls']} served from the content-hash cache)."
         f" Marginal cost of this run: **${live['usd']:.4f}**.",
         "",
         "A fully warm cache makes the pipeline free to re-run and keeps these figures"

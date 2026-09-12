@@ -227,3 +227,79 @@ shape should have prompted a review of every constant tuned around the old one. 
 unexplained empty result deserves a direct diagnosis before a plausible story: the earlier 429
 made "quota again" feel obviously right, and it was wrong. Reading the actual error, rather
 than the error that fit the recent narrative, was what ended both stalls.
+
+---
+
+## D7. Outcome of D2: the hypothesis is falsified
+
+**Date:** 2026-09-12
+**Status:** settled. D2 is superseded by this entry.
+
+**The prediction.** Applying all 215 messages and all 16 images would make the error on
+`amount_safe_to_pay` materially less symmetric, because the evidence layer is the one input that
+can push a forecast in both directions.
+
+**The result.** It did not. Measured on the same 25 solved rows, with 215 of 215 messages
+classified and 15 of 16 blank amounts resolved:
+
+| Measure | Before evidence | After evidence |
+|---|---|---|
+| Too high | 12 | 12 |
+| Too low | 12 | 12 |
+| Exact | 1 | 1 |
+| Skew | 0% | 0% |
+
+Not reduced. Identical. The falsification criterion was written down before the run precisely so
+this outcome could not be talked around, so: **the hypothesis is wrong.** Our forecast is not
+merely under-informed about facts the messages carry. It is structurally different from whatever
+produced the organizers' numbers, and the difference is not in the evidence layer.
+
+**Why it is a real negative and not a wiring failure.** Checked before concluding anything. The
+evidence does reach the forecast: it changed the amount on 4 of the 25 rows.
+
+| Row | Evidence | Before | After | Absolute error |
+|---|---|---|---|---|
+| `request_08` | message | too low | too low | 285 to 102, better |
+| `request_17` | image | too low | too high | 5,249 to 16,498, worse |
+| `request_20` | message and image | too high | too high | 11,141 to 10,437, better |
+| `request_24` | user-level message | too high | too low | 1,460 to 13,420, worse |
+
+Two improved, two regressed, and the two that flipped direction cancelled each other out, which
+is why the split held at exactly 12 and 12. A layer that moves four rows and helps two of them
+is not a layer that was silently disconnected.
+
+**Why so few rows moved.** 19 of 25 rows had evidence available but only 4 changed. The
+classification explains it: of 215 messages, 54 are `confirm` and 17 are `clarify`. They confirm
+rules the forecast already implements correctly (a pending credit is not cash, an unrealised
+market gain is not cash, a matching debit and credit are a transfer between the user's own
+accounts). Applying them is a deliberate no-op. The messages that genuinely change a number,
+51 `amend` and 11 `cancel`, mostly concern users outside the solved sample.
+
+**What this buys, since the headline is unchanged.** `amount_safe_to_pay` stayed at 4.0% exact.
+`earliest_date_for_full_payment` rose from 32.0% to 36.0%, and overall from 34.7% to 35.3%. The
+evidence layer is still required by the task and still correct work; it is simply not the fix for
+this column.
+
+**Two weaknesses the run exposed, recorded rather than quietly patched.**
+
+1. *Over-broad cancellation.* `message_17` is a `financial_service` notice that a prize payout has
+   completed and no further payments are scheduled. It was classified `cancel` on
+   `recurring_income`, which in the applier stops projecting that user's salary. A prize
+   administrator cannot end employment income. The principled guard is to let `source_type`
+   constrain what a message may cancel. Not applied here: it was identified after seeing the
+   measurement, and changing the applier now would contaminate the very result being reported.
+2. *Percentage amendments are dropped.* `message_12` says a renewed lease "increases monthly rent
+   by 12%". The schema has no field for a relative change, so it extracts no amount and the
+   applier safely does nothing. Safe, but it misses a real obligation. A `multiplier` field
+   would fix it, at the cost of re-reading all 215 messages.
+
+**What this changes about the plan.** `amount_safe_to_pay` is now confirmed as the lowest-yield
+column: 21 of its 25 ground-truth values are arbitrary continuous numbers, exact match requires
+reproducing the organizers' arithmetic to the unit, and the one hypothesis we had for closing
+that gap has been tested and rejected. Stop investing in it. Move to the discrete columns, where
+`affordability_status` and `recommended_payment_method` collapse to six distinct pairs across 25
+rows and one piece of eligibility logic scores two columns at once.
+
+**Measured cost of the experiment.** 231 documents, 13 model calls after batching, 77,851 tokens
+(48,353 in, 29,498 out), about $0.0883 at the assumed rates, answered by `gemini-3.7-flash` and
+`gemini-3.6-flash` after the configured model hit its daily cap. A re-run costs nothing.
