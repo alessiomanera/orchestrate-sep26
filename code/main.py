@@ -6,10 +6,12 @@ row gets a safe placeholder prediction, no financial decision logic yet.
 
 Usage:
     python code/main.py              # dataset/requests.csv -> output.csv
-    python code/main.py --sample     # dataset/sample_requests.csv -> output.csv
+    python code/main.py --sample     # dataset/sample_requests.csv -> code/evaluation/sample_output.csv
 
 --sample targets the 25 solved rows in sample_requests.csv, which is how we
-self-score before the real 250-row run.
+self-score before the real 250-row run. It never touches the root output.csv:
+that file must only ever be produced by the real 250-row run, since it is the
+one submitted to HackerRank.
 """
 
 from __future__ import annotations
@@ -75,9 +77,12 @@ def main() -> int:
     args = parser.parse_args()
 
     root = repo_root()
-    dataset_name = "sample_requests.csv" if args.sample else "requests.csv"
-    input_path = root / "dataset" / dataset_name
-    output_path = root / "output.csv"
+    if args.sample:
+        input_path = root / "dataset" / "sample_requests.csv"
+        output_path = root / "code" / "evaluation" / "sample_output.csv"
+    else:
+        input_path = root / "dataset" / "requests.csv"
+        output_path = root / "output.csv"
 
     request_ids = read_request_ids(input_path)
     write_output(output_path, request_ids)
