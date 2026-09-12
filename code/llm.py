@@ -61,6 +61,12 @@ _circuit_open = False
 _LAST_USAGE: tuple[int, int] = (0, 0)
 _LAST_FAILURE_WAS_UNAVAILABLE = False
 
+# The concrete model the provider says served the most recent call, taken from
+# the response's modelVersion field. For a pinned id this equals what we asked
+# for; for a floating alias it is the only way to know what actually ran, and
+# AGENTS.md section 6.5 requires the usage report to name real models.
+_LAST_MODEL_VERSION = ""
+
 # The free tier's 20-requests-per-day cap is per model, so an exhausted model
 # does not mean an exhausted key. When the configured model is out of quota the
 # run continues down this chain rather than degrading 231 documents to no
@@ -68,7 +74,14 @@ _LAST_FAILURE_WAS_UNAVAILABLE = False
 # deterministic, and is overridable with MODEL_FALLBACKS. Cache entries are
 # keyed by the model that actually answered, so a later run on a recovered
 # primary model produces its own entries instead of inheriting a substitute's.
-DEFAULT_MODEL_FALLBACKS = "gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-2.5-flash"
+# Pinned ids first, because a reproducible submission has to be able to name
+# what ran. gemini-flash-latest sits last on purpose: it is a floating alias, so
+# it is the difference between "some current flash model served this" and no
+# evidence at all, and the resolved name is recovered from the response rather
+# than assumed.
+DEFAULT_MODEL_FALLBACKS = (
+    "gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-2.5-flash,gemini-flash-latest"
+)
 
 
 def model_chain(primary: str) -> list[str]:
@@ -279,7 +292,8 @@ def _call_with_retry(
     (.agents/AGENTS.md, bounded execution). Records the call in LEDGER whenever
     the provider actually answered, so the usage report counts wasted tokens too.
     """
-    global _consecutive_failures, _circuit_open, _LAST_USAGE, _LAST_FAILURE_WAS_UNAVAILABLE
+    global _consecutive_failures, _circuit_open, _LAST_USAGE
+    global _LAST_FAILURE_WAS_UNAVAILABLE, _LAST_MODEL_VERSION
 
     if _circuit_open:
         return None
@@ -318,9 +332,10 @@ def _call_with_retry(
         input_tokens = int(usage.get("promptTokenCount", 0))
         output_tokens = int(usage.get("candidatesTokenCount", 0))
         _LAST_USAGE = (input_tokens, output_tokens)
+        _LAST_MODEL_VERSION = str(response.get("modelVersion") or model)
         LEDGER.add(
             CallRecord(
-                model=model,
+                model=_LAST_MODEL_VERSION,
                 surface=surface,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
@@ -400,7 +415,10 @@ def generate_json_batch(
             continue
         LEDGER.add(
             CallRecord(
-                model=hit.get("model", model),
+                # Report what answered, never what was configured. Older entries
+                # predate model_resolved and fall back to the id that was called,
+                # which for a pinned id is the same thing.
+                model=hit.get("model_resolved") or hit.get("model", model),
                 surface=surface,
                 input_tokens=hit.get("input_tokens", 0),
                 output_tokens=hit.get("output_tokens", 0),
@@ -502,6 +520,7 @@ def generate_json_batch(
                 json.dumps(
                     {
                         "model": model_used,
+                        "model_resolved": _LAST_MODEL_VERSION or model_used,
                         "surface": surface,
                         "parsed": row,
                         "raw_text": json.dumps(row, ensure_ascii=False),
@@ -543,7 +562,7 @@ def generate_json(
         entry = json.loads(path.read_text(encoding="utf-8"))
         LEDGER.add(
             CallRecord(
-                model=entry.get("model", model),
+                model=entry.get("model_resolved") or entry.get("model", model),
                 surface=surface,
                 input_tokens=entry.get("input_tokens", 0),
                 output_tokens=entry.get("output_tokens", 0),
@@ -568,6 +587,7 @@ def generate_json(
         json.dumps(
             {
                 "model": model,
+                "model_resolved": _LAST_MODEL_VERSION or model,
                 "surface": surface,
                 "parsed": parsed,
                 "raw_text": json.dumps(parsed, ensure_ascii=False),

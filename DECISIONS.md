@@ -303,3 +303,56 @@ rows and one piece of eligibility logic scores two columns at once.
 **Measured cost of the experiment.** 231 documents, 13 model calls after batching, 77,851 tokens
 (48,353 in, 29,498 out), about $0.0883 at the assumed rates, answered by `gemini-3.7-flash` and
 `gemini-3.6-flash` after the configured model hit its daily cap. A re-run costs nothing.
+
+---
+
+## D8. The pipeline is reproducible; model selection is not deterministic
+
+**Date:** 2026-09-12
+**Status:** in force. A known limitation, stated rather than hidden.
+
+**The claim we can make.** The pipeline is reproducible. Every document is cached by a SHA-256
+of exactly what was sent, so a re-run makes zero live calls and produces byte-identical output
+from the same cache. Temperature is 0. The forecast, the eligibility filter and the ranking are
+pure Python with no model in the loop, so the same inputs always give the same eight columns.
+
+**The claim we cannot make.** Which model reads a given document is not deterministic. The
+provider's free tier allows 20 `generateContent` requests per day per model, so the run walks a
+fallback chain when its head is exhausted or briefly unavailable. Where in that chain a document
+lands depends on how much quota was left at that moment, which is wall-clock state we do not
+control.
+
+**What actually happened, measured from `.cache`.** The configured head, `gemini-3.8-flash`,
+answered **zero** of the 231 documents. Every one was served by a fallback:
+
+| Model | Documents | Input tokens | Output tokens |
+|---|---:|---:|---:|
+| `gemini-3.6-flash` | 152 | 33,598 | 18,292 |
+| `gemini-3.7-flash` | 79 | 14,755 | 11,206 |
+| `gemini-3.8-flash` | 0 | 0 | 0 |
+
+A usage report naming the configured model would therefore have named a model that did no work.
+`evaluation/usage_report.md` now reports the `modelVersion` the provider returns with each
+response, so it names what ran even when a floating alias is used.
+
+**How the trade-off is managed rather than ignored.**
+
+1. **Pinned ids lead the chain.** `gemini-3.8-flash`, then `-3.7`, `-3.6`, `-3.5`, then
+   `gemini-2.5-flash`. Each names a fixed model, so a run answered by any of them is fully
+   reproducible and the report can say exactly what served each document.
+2. **The floating alias is last.** `gemini-flash-latest` is the final entry only. It cannot say
+   in advance which concrete model it resolves to, so it is the difference between "some current
+   flash model served this" and no evidence at all, never the first choice.
+3. **The cache pins the result.** Once a document is read, that reading is what the pipeline uses
+   forever. Model non-determinism affects only the first read of a document, not any subsequent
+   run, and a cache hit under any model in the chain counts, so a recovered quota does not cause
+   a silent re-read under a different model.
+4. **Nothing downstream branches on the model.** The extracted record is a closed vocabulary of
+   enums and numbers. Two models can disagree about one document's classification, but neither
+   can change the shape of the output or the arithmetic applied to it.
+
+**Alternative rejected.** *Claim determinism by fixing a single model and failing the run when
+its quota is exhausted.* That buys a cleaner sentence and a worse system: 231 documents against
+a 20-per-day cap means a single-model run cannot complete at all on this tier. Degrading model
+choice is strictly better than degrading coverage, and saying so is more defensible than an
+overclaim that the cache directory would immediately contradict.

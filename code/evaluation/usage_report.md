@@ -1,6 +1,6 @@
 # Usage report
 
-Generated 2026-09-12 17:39 UTC from the provider's own `usageMetadata`, recorded per call at the moment of the call.
+Generated 2026-09-12 17:52 UTC from the provider's own `usageMetadata`, recorded per call at the moment of the call.
 
 ## Provider and models
 
@@ -11,7 +11,7 @@ Generated 2026-09-12 17:39 UTC from the provider's own `usageMetadata`, recorded
 | messages | Google | `gemini-3.6-flash` | classify each message into a typed financial fact |
 | messages | Google | `gemini-3.7-flash` | classify each message into a typed financial fact |
 
-More than one model can appear for a surface. The provider caps free-tier requests per day per model, so a run that exhausts one model continues on the next in a deterministic fallback chain. The report groups by the model that actually answered.
+Every model named above is one that actually answered, taken from the provider's `modelVersion` in the response, not the model configured in `.env`. The two can differ: the provider caps free-tier requests at 20 per day per model, so a run that exhausts its configured head continues down a fallback chain. More than one model per surface is therefore expected, and a configured model that answered nothing does not appear here at all.
 
 ## Documents, calls and tokens
 

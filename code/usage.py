@@ -79,9 +79,12 @@ def write_usage_report(request_count: int = 250) -> Path:
         )
     lines += [
         "",
-        "More than one model can appear for a surface. The provider caps free-tier requests"
-        " per day per model, so a run that exhausts one model continues on the next in a"
-        " deterministic fallback chain. The report groups by the model that actually answered.",
+        "Every model named above is one that actually answered, taken from the provider's"
+        " `modelVersion` in the response, not the model configured in `.env`. The two can"
+        " differ: the provider caps free-tier requests at 20 per day per model, so a run that"
+        " exhausts its configured head continues down a fallback chain. More than one model"
+        " per surface is therefore expected, and a configured model that answered nothing"
+        " does not appear here at all.",
     ]
 
     lines += [
