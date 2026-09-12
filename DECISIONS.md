@@ -493,3 +493,148 @@ so severely that a correct forecast would classify all three correctly on the ex
 **Zero of the ten errors are classifier logic errors.** All ten trace to the forecast, and the
 specific defect is the one D9 already identified: projected income. That decides where the next
 hour goes, and it is not here.
+
+## D11. The forecast projects income like a salary, not like a grocery bill
+
+**Date:** 2026-09-12
+**Status:** in force. Supersedes the income half of the recurrence rules recorded in the
+`financial_state` design notes.
+
+**What this fixes.** D9 and D10 together localised every affordability error to one
+place: projected income. 58 of 275 users, 21.1 percent, projected **zero** income across
+a 90-day forecast while projecting 27 to 60 expense events, so their balance declined
+monotonically into the horizon and twice went negative. That is a structurally broken
+forecast for one user in five, and it feeds four output columns at once.
+
+**The measurement that drove every choice.** Across all 275 users there are 268 income
+series with two or more settled events. Classified by whether they settle at most once
+per calendar month:
+
+| | stable amount (spread < 0.28) | variable amount |
+|---|---:|---:|
+| monthly cadence | 174 | 53 |
+| weekly, nine-day or twice-monthly | **0** | 41 |
+
+Every stable income series in this dataset is monthly, and every non-monthly one is
+variable, with no exceptions in 268 series. Of the 196 series that settle at most once
+per calendar month, **all 196 land on an identical day of the month**, a spread of zero
+days. So "at most one settlement per calendar month, always on the same day" is not a
+tuned threshold: it is a property the data has exactly, and it needs no tolerance
+constant at all.
+
+**The three rules adopted, and their reach across all 275 users.**
+
+1. *A monthly series survives a skipped period.* Cadence is judged on the calendar, not
+   on the gap between consecutive events. A payroll interrupted by unpaid leave
+   (user_14: March, April, then July) is the same salary; the old median-gap test read
+   that three-month gap as a quarterly cadence and discarded the series.
+   **Reach: 8 income series.**
+2. *Two occurrences are enough for income, against three for a debit.* Two payslips a
+   month apart on the same day of the month already establish a monthly cadence, whereas
+   two similar shop receipts a month apart may be coincidence. The asymmetry is the
+   point: they are different kinds of evidence. 23 of 275 users, 8.4 percent, have two or
+   fewer settled income events at all. **Reach: 90 income series newly projected.**
+3. *Non-monthly income is not projected.* Weekly delivery payouts and twice-monthly
+   freelance milestones are real income but not a dependable forward commitment, and
+   AGENTS.md 6.3 forbids inventing unsupported future income. **Reach: 41 series no
+   longer projected.** This removed a spurious series rather than a real one: for user_10
+   the old rule projected whichever single payout label happened to repeat three times,
+   at one arbitrary amount on a 16-day cadence the user does not have. That was the row's
+   largest single error component, +1.05 months, now -0.24.
+
+**Net effect dataset-wide: users projecting no income at all fall from 58 to 17, 21.1
+percent to 6.2 percent.** The 17 that remain are principled exclusions rather than
+failures: 11 are variable non-monthly earners, and 6 have exactly one income event in
+their entire history.
+
+**Two alternatives were tested and rejected, which is why description stays in the key.**
+Both looked tidier and both are wrong, so they are recorded rather than quietly dropped:
+
+- *Group credits by category alone, the way debits are grouped.* Several users draw a
+  fixed monthly base salary **and** an irregular bonus or commission under the same
+  `salary` category: user_03 promotion arrears, user_04 quarterly bonus, user_11 sales
+  commission, user_13 second household income. Merging them puts two settlements in one
+  calendar month, which fails the monthly test and discards the base salary as well.
+  Measured: request_03, 04, 11 and 13 moved out by 1.6 to 2.7 months of recurring spend.
+- *Group credits by day of the month.* A weekly payer lands on roughly four fixed days
+  each month, and each of those days then looks like its own monthly salary. Measured:
+  request_10 went to +2.50 months.
+
+The winning combination was chosen by sweeping all twelve variants of (grouping key,
+occurrence threshold, cadence test) through `code/evaluation/diagnose_trough.py` and
+reading its own delta table rather than a hand calculation. Against the previous rule the
+winner is **3 rows better, 0 worse, 18 unchanged**.
+
+**Defect in the applier: a prize administrator cannot end employment income.** This is
+the weakness recorded as a candidate in D7 and now measured as the worst row in the
+sample. `message_17`, a `financial_service` notice that a prize claim is closed and
+"there are no further scheduled payments", was classified as a cancellation of
+`recurring_income` and stopped projecting user_24's 61,000 a month salary. A counterparty
+can only end an obligation it is party to, so only an `employer` may now cancel, amend or
+delay recurring income. The guard is narrow by design: of the 101 such changes across all
+215 messages, **99 come from an employer**, so it leaves the ordinary case untouched and
+bites only on the two that are misattributed. A message it disqualifies is not discarded;
+if it names a ledger row it is demoted to acting on that row only, which is what
+`message_17` was actually about, since it names `event_2165`, the prize credit itself.
+**Result: request_24's trough moves from -84,504 against a true 64,420 to 65,880, from
+-2.66 months to +0.03.**
+
+**Second applier defect: percentage amendments were dropped in silence.** Four messages
+say a renewed lease "increases monthly rent by 12%": message_12, 105, 147, and 175 in
+Indonesian. The extraction schema has only absolute-amount fields, so these produced no
+amount and the applier did nothing at all. The percentage is now read from the cached
+message body in pure Python, at **zero additional model calls**, and applied as a
+multiplier. Two things were learned applying it, both kept:
+
+- *Scope matters more than the number.* A recurring amendment was being applied to every
+  projected debit in that direction, so a 12 percent rent rise raised groceries,
+  transport and streaming too. It is now scoped to the single event category the message
+  names, taken from the dataset's own category vocabulary rather than invented.
+- *What cannot be placed is reported, not guessed.* message_175 says "sewa", which is not
+  in that vocabulary, so nothing is applied and the run prints
+  `[unapplied amendment] message_175`. Silence was the original defect; a visible gap is
+  the fix, not a broadcast guess.
+
+**Flagged for reversal, under the standing no-overfitting rule.** The percentage rule
+reaches only 4 users of 275, 1.5 percent, and it costs one sample row: request_16's
+trough falls by the 20,556 the rent rise adds, moving it from `affordable_now` to
+`affordable_later`. That row is non-binding, so the organizers' trough is only bounded
+below, and we now sit 12,487 under that bound, about 5 percent of the trough and inside
+the error bar D9 measured. The rule is kept because applying stated evidence is the
+behaviour the challenge asks for and silent loss is the worse failure, but it is the
+weakest-supported change in this entry and is the first candidate to revert.
+
+**Measured result on the 25 solved rows.**
+
+| Column | Before | After |
+|---|---:|---:|
+| `amount_safe_to_pay` | 4.0% | 4.0% |
+| `affordability_status` | 60.0% | 60.0% |
+| `recommended_payment_method` | 64.0% | 64.0% |
+| `earliest_date_for_full_payment` | 36.0% | **48.0%** |
+| `payment_plan` (placeholder) | 28.0% | 28.0% |
+| `spending_changes_needed` (placeholder) | 88.0% | 88.0% |
+| Overall | 46.7% | **48.7%** |
+
+The trough itself improved far more than that headline suggests. The D9 split that
+localised the defect has closed:
+
+| Trough falls | Rows before | Median before | Rows after | Median after |
+|---|---:|---:|---:|---:|
+| Before day 30 | 15 | 0.05 | 19 | **0.04** |
+| Day 30 or later | 6 | 1.12 | 2 | **0.13** |
+
+The factor of 22 between the two halves is gone, and troughs sitting within five days of
+the horizon edge fall from 4 to 1. Every binding row is now inside 0.43 months except
+request_05, which remains unexplained and is deliberately left that way, per D9.
+
+**The honest headline: the error moved, it did not shrink.** Only one of the ten
+misclassified `affordability_status` rows became correct, request_09, which also fixed
+its method and its date; request_16 broke for the reason above; so the column is
+unchanged at 60 percent. That is the finding that matters, because D10 concluded that
+zero of those ten errors were classifier logic errors. **That conclusion no longer
+holds.** Four of the rows still wrong, request_08, request_11, request_21 and request_22,
+now have a trough within 0.03, 0.03, 0.09 and 0.00 months of the organizers' own. Their
+forecast is accurate and their answer is still wrong, so the remaining error in that
+column now lives in the classifier, not in the forecast. That is where the next hour
+goes, and it is the opposite of where D10 pointed.

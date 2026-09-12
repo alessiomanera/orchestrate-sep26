@@ -35,20 +35,21 @@ Design decisions, verified against dataset/ before writing this file:
   description every time yet is still the same recurring commitment;
   checked against user_10, whose weekly groceries and dining never repeat a
   description and were invisible to the forecast until grouping dropped to
-  category level. Confirmed salary is detected the same way on the credit
-  side (event_type "income"), keeping description in the key and using the
-  smaller of the last few occurrences so a rising or noisy paycheck is
-  never over-forecast: checked against user_02, whose salary is settled on
-  the 15th of every month at an identical amount and description for 5
-  straight months with no explicit future row at all, and whose sample
-  answer only becomes explicable once that pattern is projected forward.
-  Description stays in the key for income specifically because user_10 is
-  also a gig worker whose "salary" category rotates between several
-  unrelated platform payouts roughly every week; grouping those by category
-  alone would manufacture a stable paycheck out of fundamentally
-  unpredictable income, which the sample answer for that user confirms is
-  wrong (it treats almost none of that income as safe to count on). A
-  projection of either kind is dropped if it falls within
+  category level.
+- Income (event_type "income") is projected on different rules from expense,
+  because a salary is a different kind of obligation from a grocery bill
+  (DECISIONS.md D11). It is projected only when it settles at most once per
+  calendar month, always on the same day of the month, which is what a
+  monthly commitment looks like and what a gig payout stream does not; and
+  two such settlements are enough, against three for a debit, because two
+  payslips a month apart already establish a monthly cadence whereas two
+  similar shop receipts a month apart may be coincidence. It is projected at
+  the smaller of the last few occurrences, so a rising or noisy paycheck is
+  never over-forecast and a pay cut is tracked down to its new level. Skipped
+  months are tolerated: unpaid leave interrupts a salary, it does not end it.
+  Every one of these boundaries was measured across all 275 users before it
+  was adopted, and the alternatives that were tested and rejected are recorded
+  in D11 and in _series_key. A projection of either kind is dropped if it falls within
   DEDUP_WINDOW_DAYS of an explicit future event of the same series, to
   avoid double-counting a bill or paycheck that already has a known next
   instance. Checked: zero recurring series in this dataset involve a
@@ -73,7 +74,8 @@ from evidence import EMPTY_EVIDENCE, Evidence, MessageFact
 FORECAST_HORIZON_DAYS = 90
 
 # Recurrence detection tolerances.
-MIN_OCCURRENCES_FOR_RECURRENCE = 3
+MIN_OCCURRENCES_FOR_RECURRENCE = 3   # debits: three occurrences before a series is trusted
+MIN_OCCURRENCES_FOR_INCOME = 2       # credits: two, see _detect_recurring_events
 CADENCE_TOLERANCE_DAYS = 5           # absolute slack around the median gap
 CADENCE_TOLERANCE_FRACTION = 0.2     # relative slack, whichever is looser
 DEDUP_WINDOW_DAYS = 5                # a projection this close to an explicit
@@ -90,16 +92,76 @@ def _series_key(direction: str, category: str, description: str) -> tuple[str, .
     Debits group by category alone: a variable-cost essential like groceries
     or transport is billed under a different description every time (a
     different shop, a different fare) but is still the same recurring
-    commitment. Credits keep description in the key: income only counts as
-    a confirmed, forecastable salary when the same description repeats
-    identically. A gig worker's income rotates between several unrelated
-    platform payouts under one "salary" category (verified against user_10);
-    collapsing those into one series would wrongly manufacture a stable
-    paycheck out of fundamentally unpredictable income.
+    commitment; checked against user_10, whose weekly groceries and dining
+    never repeat a description.
+
+    Credits keep description, and two alternatives were measured and rejected
+    (DECISIONS.md D11). Dropping it entirely, so credits group by category
+    like debits, looks tidier and is wrong: several users draw a fixed monthly
+    base salary and an irregular bonus or commission under the same "salary"
+    category (user_03, user_04, user_11, user_13). Merging them puts two
+    settlements in one calendar month, which fails _monthly_schedule and
+    discards the base salary too, moving those four rows out by 1.6 to 2.7
+    months of recurring spend. Replacing it with the day of the month is worse
+    still: a weekly payer lands on roughly four fixed days each month, and each
+    of those days then looks like its own monthly salary.
+
+    What actually separates a salary from a gig payout is cadence, not wording,
+    and that check lives in _monthly_schedule.
     """
     if direction == "debit":
         return (direction, category)
     return (direction, category, description)
+
+
+def _month_index(day: date) -> int:
+    """Calendar months since year zero, so month arithmetic never wraps badly."""
+    return day.year * 12 + (day.month - 1)
+
+
+def _add_months(day: date, months: int, day_of_month: int) -> date:
+    """day shifted by whole calendar months, landing on day_of_month.
+
+    Clamped to the length of the target month, so a salary paid on the 31st
+    lands on the 28th or 30th rather than overflowing into the next month.
+    """
+    index = _month_index(day) + months
+    year, month = divmod(index, 12)
+    month += 1
+    if month == 12:
+        next_month_start = date(year + 1, 1, 1)
+    else:
+        next_month_start = date(year, month + 1, 1)
+    days_in_month = (next_month_start - date(year, month, 1)).days
+    return date(year, month, min(day_of_month, days_in_month))
+
+
+def _monthly_schedule(dates: list[date]) -> int | None:
+    """The day of the month a series settles on, or None if it is not monthly.
+
+    A monthly commitment settles at most once in any calendar month, always on
+    the same day of the month. Measured across all 275 users: of the 268 income
+    series with two or more settled events, 196 satisfy this and all 196 land on
+    an identical day of month (spread of zero days, no exceptions). The other 72
+    are weekly, nine-day or twice-monthly earnings streams whose amounts vary by
+    a median of 61 percent.
+
+    Skipped months are allowed and are the point of the test. A payroll
+    interrupted by unpaid leave (user_14: March, April, then July) is still the
+    same monthly salary; a rule built on the gap between consecutive events
+    reads that three-month gap as a quarterly cadence and discards the series.
+    Judging the calendar rather than the gap makes an interruption a missed
+    payment instead of a different job.
+    """
+    if len(dates) < 2:
+        return None
+    months = [_month_index(day) for day in dates]
+    if len(set(months)) != len(months):
+        return None  # two settlements in one calendar month is not monthly
+    days_of_month = {day.day for day in dates}
+    if len(days_of_month) != 1:
+        return None
+    return days_of_month.pop()
 
 
 def repo_root() -> Path:
@@ -243,9 +305,12 @@ def _detect_recurring_events(
 
     projected: list[CashEvent] = []
     for key, rows in series.items():
-        direction, category = key[0], key[1]
+        direction = key[0]
         rows.sort(key=lambda r: r["event_date"])
-        if len(rows) < MIN_OCCURRENCES_FOR_RECURRENCE:
+        minimum_occurrences = (
+            MIN_OCCURRENCES_FOR_RECURRENCE if direction == "debit" else MIN_OCCURRENCES_FOR_INCOME
+        )
+        if len(rows) < minimum_occurrences:
             continue
 
         dated_amounts: list[tuple[date, float]] = []
@@ -257,10 +322,51 @@ def _detect_recurring_events(
             raw_amount, currency = resolved
             amount = _convert(raw_amount, currency, home_currency, row["settlement_date"])
             dated_amounts.append((_parse_date(row["event_date"]), amount))
-        if len(dated_amounts) < MIN_OCCURRENCES_FOR_RECURRENCE:
+        if len(dated_amounts) < minimum_occurrences:
             continue
 
         dates = [d for d, _ in dated_amounts]
+
+        # Conservative amount: for a debit, the larger of the last few
+        # occurrences, so a rising or noisy bill is never under-forecast.
+        # For a credit (confirmed salary), the smaller of the last few, so
+        # a rising or noisy paycheck is never over-forecast, and a pay cut is
+        # tracked down to its new level rather than averaged away.
+        recent = [amount for _, amount in dated_amounts[-3:]]
+        conservative_amount = max(recent) if direction == "debit" else min(recent)
+        signed_amount = -conservative_amount if direction == "debit" else conservative_amount
+
+        explicit_dates = explicit_dates_by_series.get(key, [])
+        source = f"recurring:{':'.join(key)}"
+
+        def emit(when: date) -> None:
+            if when > as_of_date and not any(
+                abs((when - explicit).days) <= DEDUP_WINDOW_DAYS for explicit in explicit_dates
+            ):
+                projected.append(CashEvent(when, signed_amount, source, series=direction))
+
+        if direction == "credit":
+            # Income is projected only from a monthly salary. Measured across
+            # all 275 users, every income series in this dataset that settles
+            # at most once per calendar month does so on an identical day of
+            # the month, and every series that does not is an earnings stream
+            # varying by a median of 61 percent: weekly delivery payouts,
+            # twice-monthly freelance milestones. Those are real income but
+            # they are not a dependable future commitment, and AGENTS.md 6.3
+            # forbids inventing unsupported future income, so they are left out
+            # of the forecast rather than averaged into it.
+            day_of_month = _monthly_schedule(dates)
+            if day_of_month is None:
+                continue
+            step = 1
+            while True:
+                next_date = _add_months(dates[-1], step, day_of_month)
+                if next_date > horizon_end:
+                    break
+                emit(next_date)
+                step += 1
+            continue
+
         gaps = [(b - a).days for a, b in zip(dates, dates[1:])]
         median_gap = sorted(gaps)[len(gaps) // 2]
         if median_gap <= 0:
@@ -269,28 +375,9 @@ def _detect_recurring_events(
         if any(abs(gap - median_gap) > tolerance for gap in gaps):
             continue  # not regular enough to trust as recurring
 
-        # Conservative amount: for a debit, the larger of the last few
-        # occurrences, so a rising or noisy bill is never under-forecast.
-        # For a credit (confirmed salary), the smaller of the last few, so
-        # a rising or noisy paycheck is never over-forecast.
-        recent = [amount for _, amount in dated_amounts[-3:]]
-        conservative_amount = max(recent) if direction == "debit" else min(recent)
-        signed_amount = -conservative_amount if direction == "debit" else conservative_amount
-
-        explicit_dates = explicit_dates_by_series.get(key, [])
         next_date = dates[-1] + timedelta(days=median_gap)
         while next_date <= horizon_end:
-            if next_date > as_of_date and not any(
-                abs((next_date - explicit).days) <= DEDUP_WINDOW_DAYS for explicit in explicit_dates
-            ):
-                projected.append(
-                    CashEvent(
-                        next_date,
-                        signed_amount,
-                        f"recurring:{':'.join(key)}",
-                        series=direction,
-                    )
-                )
+            emit(next_date)
             next_date += timedelta(days=median_gap)
 
     return projected
@@ -307,6 +394,18 @@ def _detect_recurring_events(
 
 # An explicit change outranks a confirmation, which outranks nothing at all.
 FACT_PRIORITY = {"cancel": 0, "amend": 0, "delay": 0, "confirm": 1, "clarify": 1, "irrelevant": 2}
+
+# Who is allowed to end or rewrite a salary. A counterparty can only change an
+# obligation it is party to: an employer can stop paying you, a prize
+# administrator cannot. Measured across all 215 messages, 99 of the 101
+# cancellations, amendments and delays aimed at recurring income come from an
+# employer, so this guard leaves the ordinary case untouched and bites only on
+# the two that are misattributed (message_17 and message_86, both from a
+# financial_service). message_17 alone was the largest single error in the
+# solved sample: it read a closed prize claim as the end of a 61,000 a month
+# salary and drove that user's projected trough from +64,420 to -84,504.
+INCOME_AUTHORITY = {"employer"}
+CHANGING_KINDS = ("cancel", "amend", "delay")
 
 
 def _fact_order(fact: "MessageFact") -> tuple[int, date]:
@@ -354,9 +453,20 @@ def _apply_message_facts(
     for fact in sorted(facts, key=_fact_order):
         effective = fact.effective_date or as_of_date
 
+        target = fact.target
+        if (
+            target == "recurring_income"
+            and fact.kind in CHANGING_KINDS
+            and fact.source_type not in INCOME_AUTHORITY
+        ):
+            # Not this sender's obligation to end. The message is not discarded:
+            # if it names a ledger row it is demoted to acting on that row only,
+            # which is what it was really about.
+            target = "related_event" if fact.related_event_id else "none"
+
         # --- a recurring flow changes or stops -----------------------------
-        if fact.target in ("recurring_income", "recurring_expense"):
-            wanted = "credit" if fact.target == "recurring_income" else "debit"
+        if target in ("recurring_income", "recurring_expense"):
+            wanted = "credit" if target == "recurring_income" else "debit"
             matching = [e for e in events if e.series == wanted and e.event_date >= effective]
 
             if fact.kind == "cancel":
@@ -367,7 +477,17 @@ def _apply_message_facts(
                 new_amount = _fact_amount_in_home(
                     fact.new_recurring_amount, fact, home_currency, effective
                 )
-                if new_amount is not None:
+                if new_amount is None and fact.relative_change and fact.scope_category:
+                    # "the renewed lease increases monthly rent by 12%": no
+                    # absolute amount to extract, but the obligation is real.
+                    # Scoped to the one category the message names, because a
+                    # rent rise is not a rise in groceries and transport too.
+                    prefix = f"recurring:{wanted}:{fact.scope_category}"
+                    for event in matching:
+                        if event.source.startswith(prefix):
+                            event.amount *= fact.relative_change
+                            event.source = f"{event.source}+{fact.message_id}"
+                elif new_amount is not None:
                     if matching:
                         signed = new_amount if wanted == "credit" else -new_amount
                         for event in matching:
@@ -388,7 +508,7 @@ def _apply_message_facts(
                             )
 
         # --- one specific ledger row is cancelled, delayed or corrected ----
-        elif fact.target == "related_event" and fact.related_event_id:
+        elif target == "related_event" and fact.related_event_id:
             target_id = fact.related_event_id
             if fact.kind == "cancel":
                 events = [e for e in events if e.event_id != target_id]

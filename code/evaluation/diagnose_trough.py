@@ -102,7 +102,7 @@ def main() -> int:
     print("=" * 108)
     print(
         f"{'request':<12}{'their_trough':>16}{'our_trough':>16}{'delta':>16}"
-        f"{'delta/月recur':>16}  {'cur':<5}{'type':<12}"
+        f"{'delta/mo_recur':>16}  {'cur':<5}{'type':<12}"
     )
     for row in binding:
         share = (
@@ -229,7 +229,34 @@ def main() -> int:
         trough_date = min(timeline, key=lambda pair: pair[1])[0]
         day = (trough_date - row["request_date"]).days
         positions.append(day)
+        row["trough_day"] = day
     print(f"  trough day offsets: {sorted(positions)}")
+
+    # D9 split. An early trough is set by explicit pending and scheduled
+    # ledger rows, which are given data; a late one is set entirely by our
+    # own projected recurrence. Keeping the two apart is what localised the
+    # defect, so the split is reported on every run rather than by hand.
+    print("")
+    print("  by where the trough falls, normalised to months of recurring spend:")
+    print(f"    {'trough falls':<22}{'rows':>6}{'median |delta|':>17}")
+    for label, keep in (
+        ("before day 30", lambda d: d < 30),
+        ("day 30 or later", lambda d: d >= 30),
+    ):
+        group = sorted(
+            abs(r["delta"] / r["monthly_recurring"])
+            for r in binding
+            if r["monthly_recurring"] and keep(r["trough_day"])
+        )
+        if not group:
+            print(f"    {label:<22}{0:>6}{'n/a':>17}")
+            continue
+        middle = len(group) // 2
+        median = (
+            group[middle] if len(group) % 2
+            else (group[middle - 1] + group[middle]) / 2
+        )
+        print(f"    {label:<22}{len(group):>6}{median:>17.2f}")
     at_edge = sum(1 for d in positions if d >= fs.FORECAST_HORIZON_DAYS - 5)
     at_start = sum(1 for d in positions if d == 0)
     print(

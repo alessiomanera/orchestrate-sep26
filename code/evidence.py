@@ -33,6 +33,7 @@ from __future__ import annotations
 import base64
 import csv
 import os
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from functools import lru_cache
@@ -199,6 +200,8 @@ class MessageFact:
     currency: str | None
     money_is_confirmed_cash: bool
     contains_embedded_instruction: bool
+    relative_change: float | None = None   # 1.12 for "rent increases by 12%"
+    scope_category: str | None = None      # the one event category the message names
 
 
 @dataclass
@@ -222,6 +225,78 @@ def _parse_date(value: str | None) -> date | None:
         return datetime.strptime(value.strip()[:10], "%Y-%m-%d").date()
     except ValueError:
         return None
+
+
+_PERCENT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:%|per\s?cent|persen)", re.IGNORECASE)
+
+# Words that mean the amount goes down, in the languages the dataset's messages
+# are written in. Everything else is read as an increase, which is the
+# financially safer default for an expense: over-reserving for a bill is safe,
+# under-reserving is not.
+_DECREASE_WORDS = (
+    "reduc", "decreas", "lower", "discount", "less", "drop",
+    "turun", "kurang", "potong",          # Indonesian
+    "verlaag", "verminder",               # Afrikaans
+    "reduci", "riduz", "baja", "disminu",  # Romance
+)
+
+
+@lru_cache(maxsize=1)
+def _debit_categories() -> tuple[str, ...]:
+    """The debit category vocabulary, taken from the dataset rather than invented."""
+    return tuple(sorted({
+        row["category"] for row in _events_by_id().values() if row["direction"] == "debit"
+    }))
+
+
+def _scope_category(text: str) -> str | None:
+    """The single event category a message is about, or None if it is unclear.
+
+    A recurring amendment has to be applied to one series, not to every
+    obligation the user has. The extraction schema says only "recurring_expense",
+    so the category is recovered here by looking for the dataset's own category
+    names in the message body: "the renewed lease increases monthly rent by 12%"
+    names rent, and only rent.
+
+    Exactly one match is required. Zero matches means the message names no
+    category we can resolve (message_175 says "sewa", the Indonesian for rent,
+    which is not in the vocabulary), and two or more means it is ambiguous. In
+    both cases nothing is applied and collect_evidence reports the message, which
+    is the point: a change we cannot place is surfaced, not spread across every
+    category or dropped in silence.
+    """
+    lowered = (text or "").lower()
+    hits = [c for c in _debit_categories() if c in lowered or c.replace("_", " ") in lowered]
+    return hits[0] if len(hits) == 1 else None
+
+
+def _relative_change(text: str) -> float | None:
+    """Read a relative amendment such as "rent increases by 12%" as a multiplier.
+
+    Returns 1.12 for a 12 percent rise, 0.95 for a 5 percent cut, or None when
+    the message states no percentage. This is pure text parsing over the message
+    body that was already fetched and cached, so it costs no model call.
+
+    It exists because the extraction schema has only absolute-amount fields, so
+    four rent-increase notices in this dataset (message_12, 105, 147 and 175,
+    one of them in Indonesian) extracted no amount at all and were dropped in
+    silence. A dropped obligation is the unsafe direction of error, and silence
+    is worse than the drop: collect_evidence now reports any amendment it still
+    cannot price.
+    """
+    match = _PERCENT.search(text or "")
+    if match is None:
+        return None
+    try:
+        percent = float(match.group(1).replace(",", "."))
+    except ValueError:
+        return None
+    if not 0 < percent < 100:
+        return None  # not a plausible change to a recurring bill
+    lowered = (text or "").lower()
+    if any(word in lowered for word in _DECREASE_WORDS):
+        return 1 - percent / 100
+    return 1 + percent / 100
 
 
 def _positive_amount(value) -> float | None:
@@ -399,6 +474,8 @@ def extract_message_facts(verbose: bool = True) -> dict[str, list[MessageFact]]:
             currency=(parsed.get("currency") or None),
             money_is_confirmed_cash=bool(parsed.get("money_is_confirmed_cash", False)),
             contains_embedded_instruction=bool(parsed.get("contains_embedded_instruction", False)),
+            relative_change=_relative_change(row.get("message_text", "")),
+            scope_category=_scope_category(row.get("message_text", "")),
         )
         by_user.setdefault(fact.user_id, []).append(fact)
 
@@ -421,6 +498,7 @@ def collect_evidence() -> Evidence:
     # mid-run it should cost us the 16 images, not the 215 messages.
     facts = extract_message_facts()
     amounts = extract_image_amounts()
+    _report_unpriceable_amendments(facts)
     live = len(LEDGER.live_calls)
     print(
         f"  resolved {len(amounts)}/16 blank amounts, "
@@ -428,3 +506,25 @@ def collect_evidence() -> Evidence:
         f"({live} live model call(s), {len(LEDGER.records) - live} from cache)"
     )
     return Evidence(amount_by_event_id=amounts, facts_by_user=facts)
+
+
+def _report_unpriceable_amendments(facts: dict[str, list[MessageFact]]) -> None:
+    """Name every amendment the pipeline still cannot turn into a number.
+
+    An amendment that states neither an absolute amount nor a percentage cannot
+    be applied, and dropping it in silence is the failure mode this exists to
+    prevent: the forecast would quietly ignore a real change to a real
+    obligation and nothing in the run output would say so. Printing the message
+    id makes the gap countable and auditable instead.
+    """
+    unpriceable = sorted(
+        fact.message_id
+        for user_facts in facts.values()
+        for fact in user_facts
+        if fact.kind == "amend"
+        and fact.new_recurring_amount is None
+        and fact.one_time_amount is None
+        and (fact.relative_change is None or fact.scope_category is None)
+    )
+    for message_id in unpriceable:
+        print(f"  [unapplied amendment] {message_id}: states a change this run cannot price or place")
