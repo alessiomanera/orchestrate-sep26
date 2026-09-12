@@ -356,3 +356,73 @@ its quota is exhausted.* That buys a cleaner sentence and a worse system: 231 do
 a 20-per-day cap means a single-model run cannot complete at all on this tier. Degrading model
 choice is strictly better than degrading coverage, and saying so is more defensible than an
 overclaim that the cache directory would immediately contradict.
+
+---
+
+## D9. Trough diagnostic: the error is concentrated, not diffuse
+
+**Date:** 2026-09-12
+**Status:** finding only. No fix applied, deliberately.
+
+**Method.** `amount_safe_to_pay` behaves as `min(requested_amount, trough - minimum_balance_to_keep)`.
+On the 21 of 25 sample rows where the constraint binds (truth < requested_amount) that inverts to
+`their_trough = truth + minimum_balance_to_keep`, which can be compared directly against the
+trough our own forecast computes. Reproducible with
+`python code/evaluation/diagnose_trough.py`.
+
+**Headline: the trough model is right, and the error is not spread evenly.** Normalising each
+delta by that user's monthly recurring spend, 16 of 21 rows land within 0.5 months and the
+median early-trough row is out by **0.05 months**, about 5% of one month's spending. Five rows
+carry nearly all the error.
+
+**The structure is trough timing, and the split is sharp.**
+
+| Trough falls | Rows | Median absolute delta (months of recurring spend) |
+|---|---:|---|
+| Before day 30 | 15 | **0.05** |
+| Day 30 or later | 6 | **1.12** |
+
+A factor of 22. The mechanism is straightforward once seen: an early trough is set by explicit
+pending and scheduled ledger rows, which are given data and which we read correctly. Nothing
+explicit reaches past about day 20 in this dataset, so a late trough is set entirely by our own
+projected recurrence, and that is where we diverge. Four rows have their trough within 5 days of
+the 90-day horizon edge, meaning the balance never recovers inside the window and the answer is
+partly an artefact of the horizon length.
+
+**The specific defect is projected income, not projected expense.** The three worst rows project
+0 or 1 income events against 39 to 60 expense events, so the balance declines monotonically and
+the trough lands at the horizon edge, twice going negative. The organizers plainly do project
+income for those users. Cause, verified per user in the event history:
+
+| Row | Income history | Why our detector finds nothing |
+|---|---|---|
+| `request_15` | 2 rows, identical description, monthly | 2 occurrences, threshold is 3 |
+| `request_14` | 3 rows, monthly either side of a leave gap, but under 2 descriptions | description is part of the series key, so neither description reaches 3 |
+| `request_24` | 5 clean monthly `Payroll credit` rows | detected correctly, then **destroyed by our own evidence layer** |
+
+**The worst row is self-inflicted, and it is the weakness recorded in D7.** `request_24` without
+evidence has a trough of 65,880 against a true 64,420: a delta of +0.03 months, one of our most
+accurate rows. With evidence it becomes -84,504, a delta of -2.66 months and the largest error in
+the sample. The cause is `message_17`, a `financial_service` notice that a prize payout completed
+and "there are no further scheduled payments", classified as `cancel` on `recurring_income`. A
+prize administrator cannot end somebody's employment income. This is exactly the over-broad
+cancellation flagged in D7, now measured: it costs us the single worst row in the sample.
+
+**The conservative one-off rule is also costing rows.** For `request_14` and `request_15` the
+messages say a salary "resumes on 2025-08-15" and a first salary is "confirmed for 2026-01-15".
+The applier injects one credit, because D2's rule is never to manufacture a recurring series from
+a single message. Evidence still improves both rows (-2,441 to +276, and -1,813 to -152) but both
+remain short of a true trough of 2,798 and 1,283. The organizers treat those messages as
+establishing a monthly salary.
+
+**One outlier is unexplained.** `request_05` troughs early (day 7) yet is out by +2.26 months: we
+project a dip of about 4,000 where the organizers project about 32,600, with no pending or
+scheduled rows involved and three salary credits projected inside the horizon. It does not fit
+the late-trough story and no mechanism has been established. Recorded as open rather than
+attributed to a guess.
+
+**Why nothing was fixed here.** Three candidate changes now have evidence behind them: constrain
+what a message may cancel by its `source_type`, let a confirmed salary message establish a
+recurring series rather than one credit, and reconsider the occurrence threshold and the role of
+`description` in the income series key. Each is a forecast change, and the instruction was to get
+the finding clean first. They are queued, not applied.
