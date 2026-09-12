@@ -6,9 +6,10 @@ per request in the required column order.
 amount_safe_to_pay and earliest_date_for_full_payment come from the
 deterministic 90-day forecast in code/financial_state.py, corrected by the
 evidence layer in code/evidence.py (the 16 document images and the 215
-messages). The remaining four columns (affordability_status,
-recommended_payment_method, payment_plan, spending_changes_needed) are still a
-safe placeholder: eligibility and plan ranking have not been built yet.
+messages). affordability_status and recommended_payment_method come from the
+eligibility filter and plan ranking in code/planning.py. payment_plan and
+spending_changes_needed are still safe placeholders: the plan grammar and the
+spending-change selector are the next step.
 
 Usage:
     python code/main.py              # dataset/requests.csv -> output.csv
@@ -28,9 +29,11 @@ from datetime import datetime
 from pathlib import Path
 
 from evidence import EMPTY_EVIDENCE, Evidence, collect_evidence
+from financial_state import _load_profiles
 from financial_state import amount_safe_to_pay as compute_amount_safe_to_pay
 from financial_state import earliest_date_for_full_payment as compute_earliest_date
 from financial_state import reconstruct_state
+from planning import classify
 from usage import write_usage_report
 
 REQUIRED_COLUMNS = [
@@ -44,15 +47,19 @@ REQUIRED_COLUMNS = [
     "decision_explanation",
 ]
 
-# Placeholder prediction for the four columns eligibility and plan ranking
-# have not been built for yet: safe (no payment recommended) and valid
-# against every enum in the output contract.
+# payment_plan and spending_changes_needed are still safe placeholders: the
+# plan grammar and the spending-change selector are the next step. Both values
+# are valid against the output contract.
 PLACEHOLDER = {
-    "affordability_status": "not_affordable",
-    "recommended_payment_method": "not_recommended",
     "payment_plan": "none",
     "spending_changes_needed": "none",
-    "decision_explanation": "Placeholder: decision logic not yet implemented.",
+}
+
+EXPLANATION = {
+    "affordable_now": "The full amount clears the minimum balance on the request date.",
+    "affordable_with_plan": "The full amount is not safe today, but an eligible plan completes it.",
+    "affordable_later": "No eligible plan completes this now; capacity arrives later in the forecast.",
+    "not_affordable": "No safe full payment occurs within the forecast and no eligible plan carries it.",
 }
 
 
@@ -78,20 +85,31 @@ def read_requests(path: Path) -> list[dict]:
 
 
 def predict(request: dict, evidence: Evidence) -> dict:
-    """amount_safe_to_pay and earliest_date_for_full_payment from the 90-day
-    forecast; every other column is still the safe placeholder.
+    """Four live columns from the forecast and the eligibility filter;
+    payment_plan and spending_changes_needed are still placeholders.
     """
     request_date = datetime.strptime(request["request_date"], "%Y-%m-%d").date()
     requested_amount = float(request["requested_amount"])
     state = reconstruct_state(request["user_id"], request_date, evidence=evidence)
+    profile = _load_profiles()[request["user_id"]]
 
     safe_amount = compute_amount_safe_to_pay(state, requested_amount)
     earliest = compute_earliest_date(state, requested_amount)
+    status, method, plan = classify(request, profile, state, requested_amount)
+
+    explanation = EXPLANATION[status]
+    if plan is not None and plan.method == "installments":
+        explanation += f" Chosen option {plan.option_id}: {plan.payment_count} payments."
+    elif plan is not None and plan.method == "partial_payment":
+        explanation += " A two-part split completes it by the desired date at no financing cost."
 
     return {
         "request_id": request["request_id"],
         "amount_safe_to_pay": _format_amount(safe_amount),
+        "affordability_status": status,
+        "recommended_payment_method": method,
         "earliest_date_for_full_payment": earliest.isoformat() if earliest else "",
+        "decision_explanation": explanation,
         **PLACEHOLDER,
     }
 

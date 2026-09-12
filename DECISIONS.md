@@ -426,3 +426,70 @@ what a message may cancel by its `source_type`, let a confirmed salary message e
 recurring series rather than one credit, and reconsider the occurrence threshold and the role of
 `description` in the income series key. Each is a forecast change, and the instruction was to get
 the finding clean first. They are queued, not applied.
+
+---
+
+## D10. Status and method from bands, not from exact amounts
+
+**Date:** 2026-09-12
+**Status:** in force
+
+**Decision.** `affordability_status` is decided first and `recommended_payment_method` follows
+from it, with a real choice only inside `affordable_with_plan`. The classifier consumes the
+forecast as a relationship rather than as a precise number.
+
+**Why bands.** D9 measured our trough against the organizers' and found a median error of about
+5% of one month's recurring spend on well-behaved rows, and far worse on rows whose trough falls
+late in the horizon. Deciding a categorical column on the second decimal of `amount_safe_to_pay`
+would inherit an accuracy we do not have and may never get. What the classifier uses instead:
+`coverage`, the ratio `amount_safe_to_pay / requested_amount`, which survives a proportional
+trough error that an absolute threshold would not; whether a safe full payment ever occurs inside
+the horizon, which is a yes/no; and whether each payment of a candidate plan clears the minimum
+balance, which is a comparison rather than a quantity.
+
+**The rules, and what each is grounded in.**
+
+1. `not_affordable` exactly when no safe full payment occurs inside the horizon and no eligible
+   plan carries the request. In the solved samples this single condition separates all 7
+   `not_affordable` rows from the other 18 with no exceptions.
+2. `affordable_now` requires coverage at 1.0 **and** that the user actually accepts
+   `full_payment`. `request_12` is the proof this second clause is needed: the whole amount is
+   safe on the request date, but the user considers only partial payments and installments, so
+   the answer is `affordable_with_plan`, not `affordable_now`.
+3. `affordable_with_plan` when an eligible plan completes the request, preferred over spending
+   changes because the ranking rules treat changes as a last resort.
+4. A near miss, coverage at or above 0.95, with `full_payment` accepted, is also
+   `affordable_with_plan` with method `full_payment`: the gap is small enough for permitted
+   spending changes to close. The 0.95 boundary is not tuned, it is read off a wide gap in the
+   data: every `affordable_with_plan` row whose method is `full_payment` sits at 0.95, 0.97 or
+   0.98, and every `affordable_later` row sits at 0.66 or below.
+5. Otherwise `affordable_later` if capacity arrives inside the horizon.
+
+**Eligibility is not availability.** An option in `request_payment_options.csv` is usable only if
+the user's preferences allow it. Installments need `installments` among the accepted methods and
+`number_of_payments` within `max_installment_months` (blank means no installments at all, which
+is 119 of 275 users). A partial split needs `partial_payment` accepted *and*
+`allows_partial_payment` true on the request, which holds for only 80 of 250 requests.
+
+**Cost, not preference, chooses between plan types.** `request_19` is the case that settles it.
+Both a 2-payment installment option and a partial split are eligible. The split wins because it
+costs the requested 39,660 against the installment plan's 41,246: a split carries no financing
+fee, so wherever both are eligible the split is cheaper, and `problem_statement.md` ranks by
+total paid. That is the whole reason `partial_payment` appears once in 25 rows rather than never.
+
+**Result.** `affordability_status` 28.0% to 60.0%, `recommended_payment_method` 28.0% to 64.0%,
+overall 35.3% to 46.7%. The 28% baseline was an artefact of always guessing the largest class,
+so the confusion matrices matter more than the headline: the classifier now populates the
+diagonal in every class rather than collapsing onto one.
+
+**Where the remaining error lives, tested rather than assumed.** For each of the 10 rows still
+wrong on `affordability_status`, the classifier was re-run with the organizers' own trough
+substituted for ours. Five become correct immediately, so those are pure forecast level error.
+The other five were examined individually: `request_08` and `request_22` have an accurate trough
+(out by 102 and by 7) but a wrong forecast *shape*, both missing projected income that arrives
+inside the horizon, and `request_01`, `request_09` and `request_12` under-report the safe amount
+so severely that a correct forecast would classify all three correctly on the existing rules.
+
+**Zero of the ten errors are classifier logic errors.** All ten trace to the forecast, and the
+specific defect is the one D9 already identified: projected income. That decides where the next
+hour goes, and it is not here.

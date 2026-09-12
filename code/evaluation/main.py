@@ -103,6 +103,40 @@ def _report_amount_error_split(
     )
 
 
+def _report_confusion(
+    expected: dict[str, dict[str, str]],
+    predicted: dict[str, dict[str, str]],
+    column: str,
+) -> None:
+    """Confusion matrix for a categorical column.
+
+    A single accuracy number hides which way a classifier leans. On these two
+    columns that matters more than usual: the placeholder that preceded this
+    logic scored 28% purely by always guessing the most common class, so the
+    shape of the errors says whether real discrimination has been gained.
+    """
+    labels = sorted(
+        {row.get(column, "") for row in expected.values()}
+        | {row.get(column, "") for row in predicted.values()}
+    )
+    width = max(len(label) for label in labels) + 2
+    print(f"\n  Confusion for {column} (rows = truth, columns = predicted)")
+    header = " " * (width + 2) + "".join(f"{label[:12]:>14}" for label in labels)
+    print(header)
+    for truth in labels:
+        cells = []
+        for guess in labels:
+            count = sum(
+                1
+                for request_id, expected_row in expected.items()
+                if expected_row.get(column, "") == truth
+                and predicted.get(request_id, {}).get(column, "") == guess
+            )
+            cells.append(f"{count if count else '.':>14}")
+        total = sum(1 for row in expected.values() if row.get(column, "") == truth)
+        print(f"  {truth:<{width}}" + "".join(cells) + f"   (n={total})")
+
+
 def main() -> int:
     root = repo_root()
 
@@ -149,6 +183,8 @@ def main() -> int:
     )
 
     _report_amount_error_split(expected, predicted)
+    _report_confusion(expected, predicted, "affordability_status")
+    _report_confusion(expected, predicted, "recommended_payment_method")
 
     overall_matched = sum(column_matches.values())
     overall_total = len(scored_columns) * total
