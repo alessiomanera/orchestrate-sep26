@@ -26,13 +26,19 @@ from pathlib import Path
 
 API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
-MAX_ATTEMPTS = 5          # bounded retry, per .agents/AGENTS.md "bounded execution"
+# Every attempt consumes one request against a 20-per-day-per-model quota, so
+# retries are a real cost here, not just latency. Three is enough to ride out a
+# transient 503 without burning a sixth of the day's budget on one document.
+MAX_ATTEMPTS = 3
 BACKOFF_BASE_SECONDS = 2.0
 THROTTLE_BACKOFF_BASE_SECONDS = 8.0   # 429/503 need far longer than a parse retry
-# A healthy call answers in a few seconds. 120s only ever meant waiting two
-# minutes to be told the quota is exhausted, which turned six unlucky images
-# into a stall long enough to block the run.
-REQUEST_TIMEOUT_SECONDS = 45
+
+# A batch of 25 documents generates thousands of tokens, and these models think
+# before answering. An earlier 45s ceiling timed out every batch and then
+# retried it, spending quota to produce nothing: the calls were never failing,
+# they were being cut off. Generous, because a timeout here is far more
+# expensive than a slow answer.
+REQUEST_TIMEOUT_SECONDS = 300
 
 # Minimum wall-clock gap between two live calls. The free-tier quota answered a
 # burst of image calls with 429 and 503, so calls are paced rather than

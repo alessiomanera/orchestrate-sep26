@@ -212,3 +212,18 @@ copies collapse into 13. The usage report must now attribute a batch's tokens ac
 documents, which it does evenly and says so. And the mixed-model possibility is real: a run can
 legitimately be answered by more than one model, so the usage report groups by model rather than
 assuming one.
+
+**Addendum, the failure that looked like a quota failure.** After batching landed, every batch
+still came back empty. The obvious reading was more quota trouble. It was not: a 45-second
+request timeout, set earlier to stop six unlucky images stalling a run, was cutting off calls
+that were working. A 25-document batch generates thousands of tokens and these models think
+before answering, so the call needed longer than the ceiling allowed. Each timeout then
+triggered a retry, and each retry spent another request against the daily cap. The timeout was
+not protecting the run, it was consuming the budget and reporting nothing.
+
+Two lessons worth stating plainly, because both were mine to avoid. A timeout tuned for one
+call shape (one small document) is wrong for another (one large batch), and changing the call
+shape should have prompted a review of every constant tuned around the old one. And an
+unexplained empty result deserves a direct diagnosis before a plausible story: the earlier 429
+made "quota again" feel obviously right, and it was wrong. Reading the actual error, rather
+than the error that fit the recent narrative, was what ended both stalls.
