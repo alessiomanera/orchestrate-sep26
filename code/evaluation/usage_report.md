@@ -1,6 +1,6 @@
 # Usage report
 
-Generated 2026-09-12 18:50 UTC from the provider's own `usageMetadata`, recorded per call at the moment of the call.
+Generated 2026-09-12 19:09 UTC from the provider's own `usageMetadata`, recorded per call at the moment of the call.
 
 ## Provider and models
 

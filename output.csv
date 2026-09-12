@@ -1,251 +1,251 @@
 request_id,amount_safe_to_pay,affordability_status,recommended_payment_method,payment_plan,earliest_date_for_full_payment,spending_changes_needed,decision_explanation
-request_26,15656000,affordable_now,full_payment,none,2025-08-03,none,The full amount clears the minimum balance on the request date.
+request_26,15656000,affordable_now,full_payment,2025-08-03:15656000,2025-08-03,none,The full amount clears the minimum balance on the request date.
 request_27,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_28,263.91,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_29,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_30,775.2,affordable_with_plan,installments,none,2026-04-06,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_83: 3 payments."
-request_31,3280521.64,affordable_later,wait,none,2024-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_30,775.2,affordable_with_plan,installments,2026-04-06:268.74|2026-05-06:268.74|2026-06-05:268.74,2026-04-06,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_83: 3 payments."
+request_31,3280521.64,affordable_later,wait,2024-09-15:18164000,2024-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_32,12373.16,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_33,40525.76,affordable_later,wait,none,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_34,129400,affordable_now,full_payment,none,2024-12-04,none,The full amount clears the minimum balance on the request date.
-request_35,23270.79,affordable_later,wait,none,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_36,530.14,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_33,40525.76,affordable_later,wait,2026-03-15:118000,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_34,129400,affordable_now,full_payment,2024-12-04:129400,2024-12-04,none,The full amount clears the minimum balance on the request date.
+request_35,23270.79,affordable_later,wait,2026-01-15:212000,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_36,530.14,affordable_later,wait,2026-09-15:3954,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_37,2784986.3,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_38,205.41,affordable_later,wait,none,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_39,128280.3,affordable_later,wait,none,2026-04-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_38,205.41,affordable_later,wait,2025-10-15:971.30,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_39,128280.3,affordable_later,wait,2026-04-15:208600,2026-04-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_40,295.68,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_41,9625836.4,affordable_later,wait,none,2025-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_42,52100,affordable_now,full_payment,none,2026-01-05,none,The full amount clears the minimum balance on the request date.
-request_43,8066547.93,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_41,9625836.4,affordable_later,wait,2025-11-15:38760000,2025-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_42,52100,affordable_now,full_payment,2026-01-05:52100,2026-01-05,none,The full amount clears the minimum balance on the request date.
+request_43,8066547.93,affordable_later,wait,2024-11-15:43339000,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_44,27739.78,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_45,2827697.51,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_46,36186.9,affordable_with_plan,partial_payment,none,2024-12-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_45,2827697.51,affordable_later,wait,2026-09-15:21983000,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_46,36186.9,affordable_with_plan,partial_payment,2024-12-03:36186.90|2024-12-15:13263.10,2024-12-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
 request_47,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_48,45700,affordable_now,full_payment,none,2026-07-25,none,The full amount clears the minimum balance on the request date.
-request_49,13194094.79,affordable_later,wait,none,2024-05-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_50,43900,affordable_now,full_payment,none,2025-08-06,none,The full amount clears the minimum balance on the request date.
-request_51,2191000,affordable_now,full_payment,none,2026-01-03,none,The full amount clears the minimum balance on the request date.
-request_52,23286.91,affordable_later,wait,none,2024-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_53,462.2,affordable_later,wait,none,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_48,45700,affordable_now,full_payment,2026-07-25:45700,2026-07-25,none,The full amount clears the minimum balance on the request date.
+request_49,13194094.79,affordable_later,wait,2024-05-15:34333000,2024-05-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_50,43900,affordable_now,full_payment,2025-08-06:43900,2025-08-06,none,The full amount clears the minimum balance on the request date.
+request_51,2191000,affordable_now,full_payment,2026-01-03:2191000,2026-01-03,none,The full amount clears the minimum balance on the request date.
+request_52,23286.91,affordable_later,wait,2024-06-15:28870,2024-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_53,462.2,affordable_later,wait,2026-01-15:1699.20,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_54,1777.74,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_55,136240.23,affordable_later,wait,none,2026-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_56,590.71,affordable_with_plan,partial_payment,none,2025-02-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
-request_57,12349.83,affordable_later,wait,none,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_58,16226000,affordable_now,full_payment,none,2024-12-07,none,The full amount clears the minimum balance on the request date.
+request_55,136240.23,affordable_later,wait,2026-08-15:218600,2026-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_56,590.71,affordable_with_plan,partial_payment,2025-02-03:590.71|2025-02-15:290.85,2025-02-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_57,12349.83,affordable_later,wait,2026-06-15:61446,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_58,16226000,affordable_now,full_payment,2024-12-07:16226000,2024-12-07,none,The full amount clears the minimum balance on the request date.
 request_59,103269,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_60,146.5,affordable_later,wait,none,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_60,146.5,affordable_later,wait,2026-01-15:199.89,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_61,28081.34,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_62,404.23,affordable_now,full_payment,none,2025-08-05,none,The full amount clears the minimum balance on the request date.
+request_62,404.23,affordable_now,full_payment,2025-08-05:404.23,2025-08-05,none,The full amount clears the minimum balance on the request date.
 request_63,40900.74,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_64,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_65,6728.49,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_66,22200,affordable_now,full_payment,none,2026-04-03,none,The full amount clears the minimum balance on the request date.
-request_67,332.91,affordable_later,wait,none,2024-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_68,1396.74,affordable_with_plan,installments,none,2025-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_187: 3 payments."
-request_69,501.45,affordable_later,wait,none,2026-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_70,49190.01,affordable_later,wait,none,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_66,22200,affordable_now,full_payment,2026-04-03:22200,2026-04-03,none,The full amount clears the minimum balance on the request date.
+request_67,332.91,affordable_later,wait,2024-09-15:2094,2024-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_68,1396.74,affordable_with_plan,installments,2025-02-14:725.09|2025-03-14:725.09|2025-04-11:725.09,2025-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_187: 3 payments."
+request_69,501.45,affordable_later,wait,2026-02-15:529.10,2026-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_70,49190.01,affordable_later,wait,2025-02-15:243900,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_71,352173.05,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_72,11290.15,affordable_with_plan,full_payment,none,2026-07-15,none,"The full amount is not safe today, but an eligible plan completes it."
-request_73,71400,affordable_now,full_payment,none,2023-01-20,none,The full amount clears the minimum balance on the request date.
-request_74,5010,affordable_now,full_payment,none,2025-08-04,none,The full amount clears the minimum balance on the request date.
+request_72,11290.15,affordable_with_plan,full_payment,2026-07-05:11330,2026-07-15,none,"The full amount is not safe today, but an eligible plan completes it."
+request_73,71400,affordable_now,full_payment,2023-01-20:71400,2023-01-20,none,The full amount clears the minimum balance on the request date.
+request_74,5010,affordable_now,full_payment,2025-08-04:5010,2025-08-04,none,The full amount clears the minimum balance on the request date.
 request_75,23968.51,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_76,610.46,affordable_later,wait,none,2024-08-24,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_77,60700,affordable_now,full_payment,none,2025-11-05,none,The full amount clears the minimum balance on the request date.
-request_78,41831.6,affordable_later,wait,none,2025-12-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_79,664.46,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_76,610.46,affordable_later,wait,2024-08-24:4455.60,2024-08-24,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_77,60700,affordable_now,full_payment,2025-11-05:60700,2025-11-05,none,The full amount clears the minimum balance on the request date.
+request_78,41831.6,affordable_later,wait,2025-12-15:50200,2025-12-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_79,664.46,affordable_later,wait,2024-11-15:2151.60,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_80,108038.26,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_81,2076,affordable_now,full_payment,none,2026-07-03,none,The full amount clears the minimum balance on the request date.
-request_82,306.2,affordable_later,wait,none,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_81,2076,affordable_now,full_payment,2026-07-03:2076,2026-07-03,none,The full amount clears the minimum balance on the request date.
+request_82,306.2,affordable_later,wait,2025-02-15:1405.20,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_83,11253.25,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_84,30804.55,affordable_later,wait,none,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_84,30804.55,affordable_later,wait,2026-06-15:95400,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_85,745550.44,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_86,46300,affordable_now,full_payment,none,2025-08-03,none,The full amount clears the minimum balance on the request date.
+request_86,46300,affordable_now,full_payment,2025-08-03:46300,2025-08-03,none,The full amount clears the minimum balance on the request date.
 request_87,6621.46,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_88,10497.62,affordable_with_plan,installments,none,2024-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_245: 3 payments."
-request_89,9047662.12,affordable_with_plan,installments,none,2025-11-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_248: 3 payments."
-request_90,2560,affordable_now,full_payment,none,2026-07-06,none,The full amount clears the minimum balance on the request date.
-request_91,546.56,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_92,34034,affordable_now,full_payment,none,2025-02-05,none,The full amount clears the minimum balance on the request date.
-request_93,1729.2,affordable_now,full_payment,none,2026-04-07,none,The full amount clears the minimum balance on the request date.
-request_94,572,affordable_now,full_payment,none,2024-12-04,none,The full amount clears the minimum balance on the request date.
+request_88,10497.62,affordable_with_plan,installments,2024-06-14:9045.23|2024-07-15:9045.23|2024-08-15:9045.23,2024-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_245: 3 payments."
+request_89,9047662.12,affordable_with_plan,installments,2025-11-18:4768746.67|2025-12-16:4768746.67|2026-01-13:4768746.67,2025-11-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_248: 3 payments."
+request_90,2560,affordable_now,full_payment,2026-07-06:2560,2026-07-06,none,The full amount clears the minimum balance on the request date.
+request_91,546.56,affordable_later,wait,2024-11-15:1927.20,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_92,34034,affordable_now,full_payment,2025-02-05:34034,2025-02-05,none,The full amount clears the minimum balance on the request date.
+request_93,1729.2,affordable_now,full_payment,2026-04-07:1729.20,2026-04-07,none,The full amount clears the minimum balance on the request date.
+request_94,572,affordable_now,full_payment,2024-12-04:572,2024-12-04,none,The full amount clears the minimum balance on the request date.
 request_95,52439.47,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_96,72366.61,affordable_with_plan,installments,none,2026-01-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_269: 3 payments."
-request_97,1205.18,affordable_with_plan,installments,none,2024-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_272: 3 payments."
+request_96,72366.61,affordable_with_plan,installments,2026-01-10:31269.33|2026-02-09:31269.33|2026-03-11:31269.33,2026-01-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_269: 3 payments."
+request_97,1205.18,affordable_with_plan,installments,2024-03-19:8145.28|2024-04-19:8145.28|2024-05-20:8145.28,2024-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_272: 3 payments."
 request_98,8550.29,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_99,16197.16,affordable_later,wait,none,2026-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_100,26602.95,affordable_with_plan,installments,none,2024-06-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_281: 3 payments."
-request_101,143500,affordable_now,full_payment,none,2025-11-03,none,The full amount clears the minimum balance on the request date.
-request_102,1716,affordable_with_plan,installments,none,2026-04-05,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_287: 3 payments."
+request_99,16197.16,affordable_later,wait,2026-07-15:18062,2026-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_100,26602.95,affordable_with_plan,installments,2024-06-13:12866.19|2024-07-14:12866.19|2024-08-14:12866.19,2024-06-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_281: 3 payments."
+request_101,143500,affordable_now,full_payment,2025-11-03:143500,2025-11-03,none,The full amount clears the minimum balance on the request date.
+request_102,1716,affordable_with_plan,installments,2026-04-05:594.88|2026-05-05:594.88|2026-06-04:594.88,2026-04-05,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_287: 3 payments."
 request_103,7203.97,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_104,17204,affordable_now,full_payment,none,2025-02-04,none,The full amount clears the minimum balance on the request date.
+request_104,17204,affordable_now,full_payment,2025-02-04:17204,2025-02-04,none,The full amount clears the minimum balance on the request date.
 request_105,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_106,438.72,affordable_later,wait,none,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_106,438.72,affordable_later,wait,2025-02-15:2207.70,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_107,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_108,1405.38,affordable_later,wait,none,2026-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_109,609.09,affordable_with_plan,installments,none,2024-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_307: 3 payments."
-request_110,22352,affordable_with_plan,installments,none,2025-08-06,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_310: 3 payments."
+request_108,1405.38,affordable_later,wait,2026-08-15:55308,2026-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_109,609.09,affordable_with_plan,installments,2024-03-18:645.98|2024-04-18:645.98|2024-05-19:645.98,2024-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_307: 3 payments."
+request_110,22352,affordable_with_plan,installments,2025-08-06:7748.69|2025-09-03:7748.69|2025-10-01:7748.69,2025-08-06,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_310: 3 payments."
 request_111,14314834.85,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_112,252.16,affordable_later,wait,none,2024-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_113,21145.06,affordable_later,wait,none,2026-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_114,54192.61,affordable_later,wait,none,2026-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_115,14426.44,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_112,252.16,affordable_later,wait,2024-08-15:271.70,2024-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_113,21145.06,affordable_later,wait,2026-11-15:36500,2026-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_114,54192.61,affordable_later,wait,2026-02-15:65300,2026-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_115,14426.44,affordable_later,wait,2024-11-15:80500,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_116,4826.6,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_117,835.82,affordable_later,wait,none,2026-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_118,654.05,affordable_later,wait,none,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_119,57880.98,affordable_later,wait,none,2025-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_120,7714000,affordable_now,full_payment,none,2026-04-06,none,The full amount clears the minimum balance on the request date.
-request_121,633.6,affordable_now,full_payment,none,2024-03-03,none,The full amount clears the minimum balance on the request date.
-request_122,20558000,affordable_with_plan,installments,none,2025-08-05,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_347: 3 payments."
+request_117,835.82,affordable_later,wait,2026-07-15:880,2026-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_118,654.05,affordable_later,wait,2025-02-15:738.10,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_119,57880.98,affordable_later,wait,2025-07-15:203500,2025-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_120,7714000,affordable_now,full_payment,2026-04-06:7714000,2026-04-06,none,The full amount clears the minimum balance on the request date.
+request_121,633.6,affordable_now,full_payment,2024-03-03:633.60,2024-03-03,none,The full amount clears the minimum balance on the request date.
+request_122,20558000,affordable_with_plan,installments,2025-08-05:7126773.33|2025-09-02:7126773.33|2025-09-30:7126773.33,2025-08-05,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_347: 3 payments."
 request_123,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_124,1352.75,affordable_with_plan,installments,none,2024-06-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_352: 3 payments."
-request_125,6468,affordable_now,full_payment,none,2025-11-06,none,The full amount clears the minimum balance on the request date.
-request_126,159600,affordable_now,full_payment,none,2026-07-03,none,The full amount clears the minimum balance on the request date.
-request_127,7694.9,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_128,25168,affordable_now,full_payment,none,2025-02-07,none,The full amount clears the minimum balance on the request date.
+request_124,1352.75,affordable_with_plan,installments,2024-06-11:1076.12|2024-07-12:1076.12|2024-08-12:1076.12,2024-06-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_352: 3 payments."
+request_125,6468,affordable_now,full_payment,2025-11-06:6468,2025-11-06,none,The full amount clears the minimum balance on the request date.
+request_126,159600,affordable_now,full_payment,2026-07-03:159600,2026-07-03,none,The full amount clears the minimum balance on the request date.
+request_127,7694.9,affordable_later,wait,2024-11-15:23980,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_128,25168,affordable_now,full_payment,2025-02-07:25168,2025-02-07,none,The full amount clears the minimum balance on the request date.
 request_129,102.49,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_130,461.15,affordable_later,wait,none,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_131,1450.38,affordable_with_plan,installments,none,2025-06-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_372: 3 payments."
-request_132,281.98,affordable_later,wait,none,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_130,461.15,affordable_later,wait,2025-02-15:1978.80,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_131,1450.38,affordable_with_plan,installments,2025-05-06:643.14|2025-06-03:643.14|2025-07-01:643.14,2025-06-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_372: 3 payments."
+request_132,281.98,affordable_later,wait,2026-03-15:379.86,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_133,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_134,4364103.29,affordable_later,wait,none,2025-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_135,257.59,affordable_with_plan,installments,none,2026-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_385: 6 payments."
-request_136,481.14,affordable_later,wait,none,2024-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_137,9660.61,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_138,991.15,affordable_with_plan,partial_payment,none,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
-request_139,1883.03,affordable_with_plan,installments,none,2024-09-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_395: 3 payments."
+request_134,4364103.29,affordable_later,wait,2025-08-15:21831000,2025-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_135,257.59,affordable_with_plan,installments,2026-07-20:54.86|2026-08-17:54.86|2026-09-14:54.86|2026-10-12:54.86|2026-11-09:54.86|2026-12-07:54.86,2026-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_385: 6 payments."
+request_136,481.14,affordable_later,wait,2024-06-15:560.40,2024-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_137,18612.61,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
+request_138,991.15,affordable_with_plan,partial_payment,2026-04-07:991.15|2026-04-15:265.79,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_139,1883.03,affordable_with_plan,installments,2024-09-07:802.88|2024-10-08:802.88|2024-11-08:802.88,2024-09-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_395: 3 payments."
 request_140,1182.68,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_141,22415.24,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_142,1263.6,affordable_now,full_payment,none,2024-12-05,none,The full amount clears the minimum balance on the request date.
-request_143,2854.67,affordable_later,wait,none,2025-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_144,161.12,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_142,1263.6,affordable_now,full_payment,2024-12-05:1263.60,2024-12-05,none,The full amount clears the minimum balance on the request date.
+request_143,2854.67,affordable_later,wait,2025-07-15:12584,2025-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_144,161.12,affordable_later,wait,2026-09-15:233.34,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_145,18610.68,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_146,12368.02,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_147,450.01,affordable_with_plan,installments,none,2026-05-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_418: 3 payments."
-request_148,6771.79,affordable_later,wait,none,2024-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_149,23929.15,affordable_with_plan,installments,none,2025-11-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_424: 3 payments."
-request_150,253.56,affordable_later,wait,none,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_151,26999000,affordable_now,full_payment,none,2024-09-03,none,The full amount clears the minimum balance on the request date.
-request_152,11670.38,affordable_later,wait,none,2025-04-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_147,450.01,affordable_with_plan,installments,2026-04-08:391.63|2026-05-08:391.63|2026-06-07:391.63,2026-05-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_418: 3 payments."
+request_148,6771.79,affordable_later,wait,2024-08-15:22242,2024-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_149,23929.15,affordable_with_plan,installments,2025-11-18:12706.03|2025-12-16:12706.03|2026-01-13:12706.03,2025-11-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_424: 3 payments."
+request_150,253.56,affordable_later,wait,2026-03-15:496.10,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_151,26999000,affordable_now,full_payment,2024-09-03:26999000,2024-09-03,none,The full amount clears the minimum balance on the request date.
+request_152,11670.38,affordable_later,wait,2025-04-15:13882,2025-04-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_153,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_154,1625.8,affordable_with_plan,installments,none,2024-12-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_438: 3 payments."
-request_155,112500,affordable_now,full_payment,none,2025-05-06,none,The full amount clears the minimum balance on the request date.
-request_156,9268.97,affordable_later,wait,none,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_157,5035082.11,affordable_later,wait,none,2024-05-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_158,242600,affordable_with_plan,installments,none,2025-08-07,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_449: 3 payments."
+request_154,1625.8,affordable_with_plan,installments,2024-12-04:563.61|2025-01-04:563.61|2025-02-04:563.61,2024-12-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_438: 3 payments."
+request_155,112500,affordable_now,full_payment,2025-05-06:112500,2025-05-06,none,The full amount clears the minimum balance on the request date.
+request_156,9268.97,affordable_later,wait,2026-06-15:43076,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_157,5035082.11,affordable_later,wait,2024-05-15:23503000,2024-05-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_158,242600,affordable_with_plan,installments,2025-08-07:84101.33|2025-09-04:84101.33|2025-10-02:84101.33,2025-08-07,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_449: 3 payments."
 request_159,2574.04,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_160,560.31,affordable_with_plan,installments,none,2024-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_454: 3 payments."
+request_160,560.31,affordable_with_plan,installments,2024-06-13:432.05|2024-07-14:432.05|2024-08-14:432.05,2024-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_454: 3 payments."
 request_161,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_162,532403.37,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_163,9168006.17,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_164,27018000,affordable_with_plan,installments,none,2025-02-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_465: 3 payments."
+request_163,9168006.17,affordable_later,wait,2024-11-15:19304000,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_164,27018000,affordable_with_plan,installments,2025-02-11:9366240|2025-03-11:9366240|2025-04-08:9366240,2025-02-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_465: 3 payments."
 request_165,62146.68,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_166,2907.6,affordable_with_plan,installments,none,2024-12-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_471: 3 payments."
-request_167,43802,affordable_now,full_payment,none,2025-05-05,none,The full amount clears the minimum balance on the request date.
-request_168,23661.78,affordable_with_plan,partial_payment,none,2026-03-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
-request_169,41976,affordable_now,full_payment,none,2024-03-04,none,The full amount clears the minimum balance on the request date.
-request_170,29407776.85,affordable_later,wait,none,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_166,2907.6,affordable_with_plan,installments,2024-12-03:1007.97|2025-01-03:1007.97|2025-02-03:1007.97,2024-12-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_471: 3 payments."
+request_167,43802,affordable_now,full_payment,2025-05-05:43802,2025-05-05,none,The full amount clears the minimum balance on the request date.
+request_168,23661.78,affordable_with_plan,partial_payment,2026-01-07:23661.78|2026-03-15:25718.22,2026-03-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_169,41976,affordable_now,full_payment,2024-03-04:41976,2024-03-04,none,The full amount clears the minimum balance on the request date.
+request_170,29407776.85,affordable_later,wait,2025-10-15:36936000,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_171,10.72,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_172,10083.7,affordable_with_plan,partial_payment,none,2024-06-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_172,10083.7,affordable_with_plan,partial_payment,2024-06-05:10083.70|2024-06-15:116.30,2024-06-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
 request_173,61805.41,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_174,1146.2,affordable_with_plan,installments,none,2026-04-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_494: 3 payments."
-request_175,2346.3,affordable_now,full_payment,none,2024-09-06,none,The full amount clears the minimum balance on the request date.
-request_176,338.88,affordable_later,wait,none,2025-04-24,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_177,1017.6,affordable_now,full_payment,none,2026-01-05,none,The full amount clears the minimum balance on the request date.
-request_178,2938.1,affordable_with_plan,installments,none,2024-12-07,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_506: 3 payments."
-request_179,7063522.36,affordable_later,wait,none,2025-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_180,66500,affordable_now,full_payment,none,2026-07-06,none,The full amount clears the minimum balance on the request date.
+request_174,1146.2,affordable_with_plan,installments,2026-04-04:397.35|2026-05-04:397.35|2026-06-03:397.35,2026-04-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_494: 3 payments."
+request_175,2346.3,affordable_now,full_payment,2024-09-06:2346.30,2024-09-06,none,The full amount clears the minimum balance on the request date.
+request_176,338.88,affordable_later,wait,2025-04-24:1239.70,2025-04-24,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_177,1017.6,affordable_now,full_payment,2026-01-05:1017.60,2026-01-05,none,The full amount clears the minimum balance on the request date.
+request_178,2938.1,affordable_with_plan,installments,2024-12-07:1018.54|2025-01-07:1018.54|2025-02-07:1018.54,2024-12-07,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_506: 3 payments."
+request_179,7063522.36,affordable_later,wait,2025-07-15:41648000,2025-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_180,66500,affordable_now,full_payment,2026-07-06:66500,2026-07-06,none,The full amount clears the minimum balance on the request date.
 request_181,426.97,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_182,65714,affordable_now,full_payment,none,2025-08-05,none,The full amount clears the minimum balance on the request date.
-request_183,22485922.85,affordable_later,wait,none,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_182,65714,affordable_now,full_payment,2025-08-05:65714,2025-08-05,none,The full amount clears the minimum balance on the request date.
+request_183,22485922.85,affordable_later,wait,2026-06-15:26866000,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_184,4465.97,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_185,389.78,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_186,11279.18,affordable_later,wait,none,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_187,36573.65,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_185,389.78,affordable_later,wait,2026-01-15:1257.30,2026-01-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_186,11279.18,affordable_later,wait,2026-03-15:26554,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_187,36573.65,affordable_later,wait,2024-11-15:187500,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_188,45.26,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_189,488.4,affordable_now,full_payment,none,2026-07-04,none,The full amount clears the minimum balance on the request date.
-request_190,568.86,affordable_later,wait,none,2024-12-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_191,664.4,affordable_now,full_payment,none,2025-05-03,none,The full amount clears the minimum balance on the request date.
-request_192,225.43,affordable_later,wait,none,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_193,49,affordable_with_plan,installments,none,2024-05-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_549: 3 payments."
-request_194,37622.78,affordable_later,wait,none,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_195,953.74,affordable_with_plan,installments,none,2026-02-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_555: 3 payments."
-request_196,762.3,affordable_now,full_payment,none,2024-06-03,none,The full amount clears the minimum balance on the request date.
+request_189,488.4,affordable_now,full_payment,2026-07-04:488.40,2026-07-04,none,The full amount clears the minimum balance on the request date.
+request_190,568.86,affordable_later,wait,2024-12-15:2557.50,2024-12-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_191,664.4,affordable_now,full_payment,2025-05-03:664.40,2025-05-03,none,The full amount clears the minimum balance on the request date.
+request_192,225.43,affordable_later,wait,2026-06-15:2046,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_193,49,affordable_with_plan,installments,2024-03-21:420.23|2024-04-21:420.23|2024-05-22:420.23,2024-05-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_549: 3 payments."
+request_194,37622.78,affordable_later,wait,2025-10-15:132800,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_195,953.74,affordable_with_plan,installments,2026-01-09:405.74|2026-02-08:405.74|2026-03-10:405.74,2026-02-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_555: 3 payments."
+request_196,762.3,affordable_now,full_payment,2024-06-03:762.30,2024-06-03,none,The full amount clears the minimum balance on the request date.
 request_197,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_198,185800,affordable_now,full_payment,none,2026-07-07,none,The full amount clears the minimum balance on the request date.
-request_199,23674000,affordable_with_plan,installments,none,2024-09-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_569: 3 payments."
-request_200,21717000,affordable_now,full_payment,none,2025-02-06,none,The full amount clears the minimum balance on the request date.
-request_201,23997000,affordable_now,full_payment,none,2026-04-03,none,The full amount clears the minimum balance on the request date.
-request_202,123900,affordable_now,full_payment,none,2024-12-05,none,The full amount clears the minimum balance on the request date.
+request_198,185800,affordable_now,full_payment,2026-07-07:185800,2026-07-07,none,The full amount clears the minimum balance on the request date.
+request_199,23674000,affordable_with_plan,installments,2024-09-07:8206986.67|2024-10-08:8206986.67|2024-11-08:8206986.67,2024-09-04,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_569: 3 payments."
+request_200,21717000,affordable_now,full_payment,2025-02-06:21717000,2025-02-06,none,The full amount clears the minimum balance on the request date.
+request_201,23997000,affordable_now,full_payment,2026-04-03:23997000,2026-04-03,none,The full amount clears the minimum balance on the request date.
+request_202,123900,affordable_now,full_payment,2024-12-05:123900,2024-12-05,none,The full amount clears the minimum balance on the request date.
 request_203,704.17,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_204,546.3,affordable_later,wait,none,2026-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_205,10621000,affordable_now,full_payment,none,2024-03-06,none,The full amount clears the minimum balance on the request date.
-request_206,1404.7,affordable_with_plan,installments,none,2025-08-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_592: 3 payments."
-request_207,4176.47,affordable_later,wait,none,2026-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_208,2841210.92,affordable_later,wait,none,2024-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_204,546.3,affordable_later,wait,2026-02-15:588.74,2026-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_205,10621000,affordable_now,full_payment,2024-03-06:10621000,2024-03-06,none,The full amount clears the minimum balance on the request date.
+request_206,1404.7,affordable_with_plan,installments,2025-08-03:486.96|2025-08-31:486.96|2025-09-28:486.96,2025-08-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_592: 3 payments."
+request_207,4176.47,affordable_later,wait,2026-07-15:11830,2026-07-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_208,2841210.92,affordable_later,wait,2024-06-15:4413000,2024-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_209,1414.4,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_210,963.07,affordable_with_plan,partial_payment,none,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
-request_211,316.49,affordable_later,wait,none,2024-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_210,963.07,affordable_with_plan,partial_payment,2026-04-06:963.07|2026-04-15:396.95,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_211,316.49,affordable_later,wait,2024-09-15:1788.60,2024-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_212,7317465.79,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_213,2363.64,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_214,51317.32,affordable_with_plan,partial_payment,none,2024-12-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_214,51317.32,affordable_with_plan,partial_payment,2024-12-04:51317.32|2024-12-15:18432.68,2024-12-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
 request_215,29376.81,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_216,433.94,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_217,18346.53,affordable_with_plan,installments,none,2024-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_622: 3 payments."
-request_218,26713995.96,affordable_with_plan,installments,none,2025-08-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_625: 3 payments."
-request_219,1336.01,affordable_with_plan,installments,none,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_628: 3 payments."
+request_216,433.94,affordable_later,wait,2026-09-15:3332.40,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_217,18346.53,affordable_with_plan,installments,2024-03-19:12889.07|2024-04-19:12889.07|2024-05-20:12889.07,2024-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_622: 3 payments."
+request_218,26713995.96,affordable_with_plan,installments,2025-08-07:21195893.33|2025-09-04:21195893.33|2025-10-02:21195893.33,2025-08-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_625: 3 payments."
+request_219,1336.01,affordable_with_plan,installments,2026-04-07:580.01|2026-05-07:580.01|2026-06-06:580.01,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_628: 3 payments."
 request_220,36.8,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_221,109800,affordable_now,full_payment,none,2025-11-03,none,The full amount clears the minimum balance on the request date.
-request_222,34078,affordable_now,full_payment,none,2026-01-05,none,The full amount clears the minimum balance on the request date.
-request_223,898.7,affordable_now,full_payment,none,2024-09-07,none,The full amount clears the minimum balance on the request date.
-request_224,9167101.72,affordable_later,wait,none,2025-04-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_225,9163666.66,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_226,155007.42,affordable_with_plan,full_payment,none,2025-02-15,none,"The full amount is not safe today, but an eligible plan completes it."
+request_221,109800,affordable_now,full_payment,2025-11-03:109800,2025-11-03,none,The full amount clears the minimum balance on the request date.
+request_222,34078,affordable_now,full_payment,2026-01-05:34078,2026-01-05,none,The full amount clears the minimum balance on the request date.
+request_223,898.7,affordable_now,full_payment,2024-09-07:898.70,2024-09-07,none,The full amount clears the minimum balance on the request date.
+request_224,9167101.72,affordable_later,wait,2025-04-15:10327000,2025-04-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_225,9163666.66,affordable_later,wait,2026-09-15:22059000,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_226,155007.42,affordable_with_plan,full_payment,2024-12-03:157000,2025-02-15,none,"The full amount is not safe today, but an eligible plan completes it."
 request_227,6905.25,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_228,3845261.94,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_229,544.89,affordable_with_plan,installments,none,2024-05-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_659: 3 payments."
-request_230,3537.6,affordable_now,full_payment,none,2025-08-06,none,The full amount clears the minimum balance on the request date.
-request_231,30402.18,affordable_with_plan,installments,none,2026-01-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_666: 3 payments."
+request_229,544.89,affordable_with_plan,installments,2024-03-18:529.29|2024-04-18:529.29|2024-05-19:529.29,2024-05-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_659: 3 payments."
+request_230,3537.6,affordable_now,full_payment,2025-08-06:3537.60,2025-08-06,none,The full amount clears the minimum balance on the request date.
+request_231,30402.18,affordable_with_plan,installments,2026-01-06:12378.08|2026-02-05:12378.08|2026-03-07:12378.08,2026-01-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_666: 3 payments."
 request_232,399.9,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_233,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_234,166.5,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_235,967.2,affordable_now,full_payment,none,2024-09-06,none,The full amount clears the minimum balance on the request date.
+request_234,166.5,affordable_later,wait,2026-09-15:1213.30,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_235,967.2,affordable_now,full_payment,2024-09-06:967.20,2024-09-06,none,The full amount clears the minimum balance on the request date.
 request_236,5253305.38,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_237,17727292.92,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_238,663.6,affordable_with_plan,installments,none,2024-12-07,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_686: 3 payments."
-request_239,642,affordable_now,full_payment,none,2025-05-04,none,The full amount clears the minimum balance on the request date.
+request_238,663.6,affordable_with_plan,installments,2024-12-07:230.05|2025-01-07:230.05|2025-02-07:230.05,2024-12-07,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_686: 3 payments."
+request_239,642,affordable_now,full_payment,2025-05-04:642,2025-05-04,none,The full amount clears the minimum balance on the request date.
 request_240,13491.65,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_241,21052000,affordable_later,wait,none,2024-03-03,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_241,21052000,affordable_later,wait,2024-03-03:21052000,2024-03-03,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_242,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_243,17468,affordable_now,full_payment,none,2026-07-07,none,The full amount clears the minimum balance on the request date.
-request_244,49918,affordable_now,full_payment,none,2024-06-04,none,The full amount clears the minimum balance on the request date.
+request_243,17468,affordable_now,full_payment,2026-07-07:17468,2026-07-07,none,The full amount clears the minimum balance on the request date.
+request_244,49918,affordable_now,full_payment,2024-06-04:49918,2024-06-04,none,The full amount clears the minimum balance on the request date.
 request_245,31979.05,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_246,64086,affordable_with_plan,installments,none,2026-04-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_710: 3 payments."
-request_247,1059.3,affordable_now,full_payment,none,2024-09-05,none,The full amount clears the minimum balance on the request date.
-request_248,914.91,affordable_with_plan,partial_payment,none,2025-02-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
-request_249,130.63,affordable_later,wait,none,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_246,64086,affordable_with_plan,installments,2026-04-03:22216.48|2026-05-03:22216.48|2026-06-02:22216.48,2026-04-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_710: 3 payments."
+request_247,1059.3,affordable_now,full_payment,2024-09-05:1059.30,2024-09-05,none,The full amount clears the minimum balance on the request date.
+request_248,914.91,affordable_with_plan,partial_payment,2025-02-07:914.91|2025-02-15:1050.69,2025-02-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_249,130.63,affordable_later,wait,2026-03-15:643.20,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_250,15007.81,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
 request_251,17.98,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_252,3327025.91,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_253,1330.51,affordable_later,wait,none,2024-05-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_254,836.2,affordable_later,wait,none,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_255,3345000,affordable_now,full_payment,none,2026-04-06,none,The full amount clears the minimum balance on the request date.
-request_256,145685.49,affordable_later,wait,none,2024-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_257,354.72,affordable_later,wait,none,2025-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_258,1113.6,affordable_now,full_payment,none,2026-01-07,none,The full amount clears the minimum balance on the request date.
-request_259,486.91,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_252,3327025.91,affordable_later,wait,2026-09-15:28082000,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_253,1330.51,affordable_later,wait,2024-05-15:2840.20,2024-05-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_254,836.2,affordable_later,wait,2025-10-15:3535.20,2025-10-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_255,3345000,affordable_now,full_payment,2026-04-06:3345000,2026-04-06,none,The full amount clears the minimum balance on the request date.
+request_256,145685.49,affordable_later,wait,2024-08-15:218700,2024-08-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_257,354.72,affordable_later,wait,2025-11-15:1352.40,2025-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_258,1113.6,affordable_now,full_payment,2026-01-07:1113.60,2026-01-07,none,The full amount clears the minimum balance on the request date.
+request_259,486.91,affordable_later,wait,2024-11-15:935,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_260,7692072.07,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_261,1830.4,affordable_now,full_payment,none,2026-07-03,none,The full amount clears the minimum balance on the request date.
-request_262,9236000,affordable_now,full_payment,none,2024-12-05,none,The full amount clears the minimum balance on the request date.
+request_261,1830.4,affordable_now,full_payment,2026-07-03:1830.40,2026-07-03,none,The full amount clears the minimum balance on the request date.
+request_262,9236000,affordable_now,full_payment,2024-12-05:9236000,2024-12-05,none,The full amount clears the minimum balance on the request date.
 request_263,6399.45,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_264,22053.1,affordable_later,wait,none,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_264,22053.1,affordable_later,wait,2026-06-15:111300,2026-06-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
 request_265,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_266,935,affordable_with_plan,installments,none,2025-08-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_764: 3 payments."
-request_267,1557.19,affordable_later,wait,none,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_268,1032.18,affordable_with_plan,installments,none,2024-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_770: 3 payments."
+request_266,935,affordable_with_plan,installments,2025-08-03:324.13|2025-08-31:324.13|2025-09-28:324.13,2025-08-03,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_764: 3 payments."
+request_267,1557.19,affordable_later,wait,2026-03-15:1925,2026-03-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_268,1032.18,affordable_with_plan,installments,2024-06-14:841.22|2024-07-15:841.22|2024-08-15:841.22,2024-07-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_770: 3 payments."
 request_269,0,not_affordable,not_recommended,none,,none,No safe full payment occurs within the forecast and no eligible plan carries it.
-request_270,57.96,affordable_later,wait,none,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_271,16257.2,affordable_later,wait,none,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_272,5885838.28,affordable_with_plan,installments,none,2025-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_780: 3 payments."
-request_273,9192347.08,affordable_with_plan,partial_payment,none,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
-request_274,2078.42,affordable_later,wait,none,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
-request_275,15884000,affordable_now,full_payment,none,2025-05-06,none,The full amount clears the minimum balance on the request date.
+request_270,57.96,affordable_later,wait,2026-09-15:3028.80,2026-09-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_271,16257.2,affordable_later,wait,2024-11-15:91300,2024-11-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_272,5885838.28,affordable_with_plan,installments,2025-02-12:4709466.67|2025-03-12:4709466.67|2025-04-09:4709466.67,2025-03-15,none,"The full amount is not safe today, but an eligible plan completes it. Chosen option payment_option_780: 3 payments."
+request_273,9192347.08,affordable_with_plan,partial_payment,2026-04-07:9192347.08|2026-04-15:6668652.92,2026-04-15,none,"The full amount is not safe today, but an eligible plan completes it. A two-part split completes it by the desired date at no financing cost."
+request_274,2078.42,affordable_later,wait,2025-02-15:2713.70,2025-02-15,none,No eligible plan completes this now; capacity arrives later in the forecast.
+request_275,15884000,affordable_now,full_payment,2025-05-06:15884000,2025-05-06,none,The full amount clears the minimum balance on the request date.

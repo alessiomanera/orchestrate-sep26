@@ -33,7 +33,7 @@ from financial_state import _load_profiles
 from financial_state import amount_safe_to_pay as compute_amount_safe_to_pay
 from financial_state import earliest_date_for_full_payment as compute_earliest_date
 from financial_state import reconstruct_state
-from planning import classify
+from planning import classify, format_payment_plan
 from usage import write_usage_report
 
 REQUIRED_COLUMNS = [
@@ -47,11 +47,9 @@ REQUIRED_COLUMNS = [
     "decision_explanation",
 ]
 
-# payment_plan and spending_changes_needed are still safe placeholders: the
-# plan grammar and the spending-change selector are the next step. Both values
-# are valid against the output contract.
+# spending_changes_needed is still a safe placeholder: the selector is the next
+# step, and "none" is valid against the output contract.
 PLACEHOLDER = {
-    "payment_plan": "none",
     "spending_changes_needed": "none",
 }
 
@@ -85,8 +83,8 @@ def read_requests(path: Path) -> list[dict]:
 
 
 def predict(request: dict, evidence: Evidence) -> dict:
-    """Four live columns from the forecast and the eligibility filter;
-    payment_plan and spending_changes_needed are still placeholders.
+    """Five live columns from the forecast, the eligibility filter and the plan
+    grammar; spending_changes_needed is still a placeholder.
     """
     request_date = datetime.strptime(request["request_date"], "%Y-%m-%d").date()
     requested_amount = float(request["requested_amount"])
@@ -108,6 +106,7 @@ def predict(request: dict, evidence: Evidence) -> dict:
         "amount_safe_to_pay": _format_amount(safe_amount),
         "affordability_status": status,
         "recommended_payment_method": method,
+        "payment_plan": format_payment_plan(plan),
         "earliest_date_for_full_payment": earliest.isoformat() if earliest else "",
         "decision_explanation": explanation,
         **PLACEHOLDER,

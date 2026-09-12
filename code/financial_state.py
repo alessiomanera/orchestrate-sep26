@@ -477,17 +477,11 @@ def _apply_message_facts(
                 new_amount = _fact_amount_in_home(
                     fact.new_recurring_amount, fact, home_currency, effective
                 )
-                if new_amount is None and fact.relative_change and fact.scope_category:
-                    # "the renewed lease increases monthly rent by 12%": no
-                    # absolute amount to extract, but the obligation is real.
-                    # Scoped to the one category the message names, because a
-                    # rent rise is not a rise in groceries and transport too.
-                    prefix = f"recurring:{wanted}:{fact.scope_category}"
-                    for event in matching:
-                        if event.source.startswith(prefix):
-                            event.amount *= fact.relative_change
-                            event.source = f"{event.source}+{fact.message_id}"
-                elif new_amount is not None:
+                # A relative amendment ("rent increases by 12%") is parsed and
+                # reported but deliberately not applied. Measured both ways on
+                # the solved rows: applying it costs 4 points of
+                # affordability_status and 2.6 overall (DECISIONS.md D12).
+                if new_amount is not None:
                     if matching:
                         signed = new_amount if wanted == "credit" else -new_amount
                         for event in matching:

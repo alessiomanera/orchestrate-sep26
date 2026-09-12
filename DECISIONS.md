@@ -638,3 +638,176 @@ now have a trough within 0.03, 0.03, 0.09 and 0.00 months of the organizers' own
 forecast is accurate and their answer is still wrong, so the remaining error in that
 column now lives in the classifier, not in the forecast. That is where the next hour
 goes, and it is the opposite of where D10 pointed.
+
+## D12. The percentage amendment is parsed and reported, but not applied
+
+**Date:** 2026-09-12
+**Status:** settled. Closes the reversal candidate D11 flagged.
+
+**The question.** D11 kept the percentage-amendment rule on a principle, that silent
+evidence loss is the worse failure, while recording that it cost request_16 and reached
+only 4 users of 275. A principle held against a known cost is a judgment call, and this
+one was testable, so it was tested rather than argued.
+
+**The experiment.** The scorer was run twice on the 25 solved rows: once as committed,
+once with the amendment **application** disabled and the loud reporting of unparsed
+amendments kept. Nothing else changed.
+
+| Column | Applied | Not applied |
+|---|---:|---:|
+| `amount_safe_to_pay` | 4.0% | **8.0%** |
+| `affordability_status` | 60.0% | **64.0%** |
+| `recommended_payment_method` | 64.0% | **68.0%** |
+| `payment_plan` | 28.0% | 28.0% |
+| `earliest_date_for_full_payment` | 48.0% | **52.0%** |
+| `spending_changes_needed` | 88.0% | 88.0% |
+| Overall | 48.7% | **51.3%** |
+
+Not applying it is better on four of the six columns and worse on none, for 2.6 points
+overall. The decision rule was written down before the run: if disabling improves
+`affordability_status`, the rule is net-negative. It improves it by 4 points.
+
+**Decision.** The application is removed. The parsing and the reporting stay, and they now
+do more than they did: because the multiplier is still extracted, the run can name it
+rather than merely note an absence.
+
+```
+[unapplied amendment] message_12:  states a relative change (x1.12 on rent), not applied, see D12
+[unapplied amendment] message_175: states a change with no amount this run can price or place
+```
+
+That is the honest position. We can read three of the four notices precisely, we choose
+not to act on them because acting measurably degrades the answer, and the run says so by
+message id every time. The failure mode D11 was guarding against, a real obligation
+disappearing with nothing in the output to show for it, is still closed. What changed is
+that the guard no longer costs accuracy to provide.
+
+**Why principle and measurement agreed in the end.** The rule was never wrong about the
+rent rising. It was wrong about what a forecast is for. The 12 percent is a fact about a
+future bill; the organizers' trough for those users does not reflect it, and on request_16
+applying it moved us 12,487 the wrong side of their bound. Reporting a fact and
+incorporating it into a projection are different acts, and only the second one has to earn
+its accuracy.
+
+---
+
+## D13. payment_plan is a rendering of the chosen method, not a new decision
+
+**Date:** 2026-09-12
+**Status:** in force
+
+**What it was.** A hardcoded `none` for all 250 rows, scoring 28 percent only because 7
+of the 25 solved rows genuinely are `none`. 72 points of headroom on one column, the
+largest single block left.
+
+**The grammar, read off the 18 solved rows that carry a plan rather than assumed.**
+
+| Method | Plan | Established by |
+|---|---|---|
+| `not_recommended` | `none` | all 7 such rows |
+| `full_payment` | one payment, `request_date`, full amount | request_01, 06, 09, 11, 16, 21 |
+| `wait` | one payment, `earliest_date_for_full_payment`, full amount | request_03, 04, 08, 13, 18, 23 |
+| `installments` | the supplied option's schedule, exactly | request_02, 07, 12, 17, 22 |
+| `partial_payment` | safe amount on `request_date`, remainder on `earliest_date` | request_19 |
+
+**Two things the data said that a reasonable reading of the brief does not.**
+
+1. **A `wait` is not `none`.** The obvious reading is that waiting means there is nothing
+   to schedule. All six `wait` rows in the solved sample carry a single full payment on
+   the first safe date. Waiting is a plan: it says pay the whole thing, later. The `wait`
+   branch of `classify` now builds that Plan rather than returning None, so the formatter
+   has one uniform job and no method needs a special case.
+2. **`payment_plan` and `amount_safe_to_pay` format money differently.** The plan column
+   writes a whole number bare and everything else to exactly two decimals: a requested
+   amount of 996.6 appears as `996.60` and one of 38016 as `38016`. The
+   `amount_safe_to_pay` column strips trailing zeros in the same file: `17229139.2`,
+   `603.3`, `433.4`. Two columns, two formats. Assuming they matched would have cost four
+   rows. The formatter is checked by round-tripping all 18 ground-truth plans back through
+   it in `code/tests/test_payment_plan.py`, which is the strongest available guard against
+   drifting off the grammar.
+
+An instalment plan is never synthesised. `_installment_payments` reads `first_payment_date`,
+`number_of_payments`, `payment_amount` and `payment_frequency_days` straight from
+`request_payment_options.csv`, so a plan we emit either matches a supplied option exactly
+or is not emitted.
+
+**Result: 28.0 percent to 64.0 percent, and overall 51.3 to 57.3.**
+
+**Where the remaining error actually sits, which is the useful part.** Of the 9 rows still
+wrong, **8 are wrong only because `recommended_payment_method` is wrong**. The plan
+rendered is the correct plan for the method we chose; the method was the mistake. The
+ninth, request_04, has the method right and inherits a wrong date from
+`earliest_date_for_full_payment` (2024-07-15 against a true 2024-06-15).
+
+| Truth method | Plan right | Plan wrong |
+|---|---:|---:|
+| `not_recommended` | 6 | 1 |
+| `full_payment` | 4 | 2 |
+| `wait` | 3 | 3 |
+| `installments` | 3 | 2 |
+| `partial_payment` | 0 | 1 |
+
+So this column has no independent error left. It is now a pure function of
+`recommended_payment_method` and `earliest_date_for_full_payment`, and it cannot rise
+above them. Note in particular that **no row fails because of `amount_safe_to_pay`**: the
+worry that a 4 percent column would drag the plans down did not materialise, because only
+`partial_payment` depends on that amount and it appears once in 25 rows, where the method
+was already wrong for an unrelated reason.
+
+---
+
+## D14. First full submission dress rehearsal, and what it caught
+
+**Date:** 2026-09-12
+**Status:** in force
+
+**Why now rather than at hour 22.** The packaging path had never been run end to end. A
+submission path that has only been reasoned about is an untested code path, and the cost
+of discovering that at the deadline is the whole entry.
+
+**Measured, on the real 250-row run.**
+
+| | |
+|---|---|
+| Wall clock, 250 requests | **1.75 seconds** |
+| Live model calls | **0** (231 of 231 documents served from the content-hash cache) |
+| `code.zip` | **25 files, 101 KB**, integrity verified |
+| Models that answered | `gemini-3.6-flash`, `gemini-3.7-flash` |
+| Calls, tokens | 13 calls, 48,353 in and 29,498 out, 77,851 total |
+| Per request | 311.4 tokens, about $0.000353 |
+| Estimated total cost | **$0.0883** |
+
+The run is effectively free and effectively instant because the architecture confines the
+model to 231 dataset-sized documents that are read once and cached, never to the 250
+requests. That is the decision from `.agents/AGENTS.md` paying off, and it is the answer
+to the judge's latency and cost question: model calls do not scale with the request count.
+
+**It caught a real defect, which is the point of a rehearsal.** `code.zip` is built from
+`git ls-files`, so a source file that is untracked is not rejected, it is **silently
+omitted**. The first archive shipped without `code/tests/test_payment_plan.py`, written
+minutes earlier and never committed. Nothing in the output said so. A gate now fails the
+build when `git ls-files --others --exclude-standard code/` returns anything, and it was
+confirmed to fire on exactly that file before the file was committed.
+
+**A second gate was tightened.** The usage report was checked only for existence, so an
+empty or stubbed file would have passed and shipped, which is precisely the AGENTS.md 6.5
+deliverable. It is now checked for the provider and model table, the token table, the
+per-request averages, the cost figures, a non-zero totals row, a model named in backticks,
+and the absence of placeholder text. Verified to fail on all four realistic stub shapes:
+empty file, a `TODO` stub, a real report with placeholder text spliced in, and a real
+report whose totals row reads zero.
+
+**Leak check on the archive.** `.env`, `log.txt`, `.agents/`, `_PERSONAL/`, `.cache/` and
+`.venv/` are all absent. `.env.example` is present and carries no value. The 25 tracked
+dataset files are excluded deliberately; the organizers supply their own.
+
+**The strongest check: the archive was extracted to a clean directory, given only
+`dataset/`, and run there.** With no `.env`, no API key and no warm cache, all 29 tests
+pass and `code/main.py --no-evidence` writes a conforming 250-row `output.csv`. That
+satisfies AGENTS.md 6.4's "runnable from the terminal" against the artefact we would
+actually submit, rather than against the working tree.
+
+**Known and accepted.** A fresh clone with no `.cache/` needs live model calls to
+reproduce the evidence layer, and the provider's free tier caps 20 requests per day per
+model. The cache is therefore not an optimisation, it is what makes the reported token
+figures reproducible. It is deliberately not committed, being machine-local.

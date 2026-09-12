@@ -517,14 +517,17 @@ def _report_unpriceable_amendments(facts: dict[str, list[MessageFact]]) -> None:
     obligation and nothing in the run output would say so. Printing the message
     id makes the gap countable and auditable instead.
     """
-    unpriceable = sorted(
-        fact.message_id
+    unapplied = sorted(
+        (fact.message_id, fact.relative_change, fact.scope_category)
         for user_facts in facts.values()
         for fact in user_facts
         if fact.kind == "amend"
         and fact.new_recurring_amount is None
         and fact.one_time_amount is None
-        and (fact.relative_change is None or fact.scope_category is None)
     )
-    for message_id in unpriceable:
-        print(f"  [unapplied amendment] {message_id}: states a change this run cannot price or place")
+    for message_id, relative, scope in unapplied:
+        if relative and scope:
+            detail = f"states a relative change (x{relative:g} on {scope}), not applied, see D12"
+        else:
+            detail = "states a change with no amount this run can price or place"
+        print(f"  [unapplied amendment] {message_id}: {detail}")

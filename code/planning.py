@@ -66,7 +66,7 @@ EPSILON = 0.01
 class Plan:
     """One candidate way of completing the request."""
 
-    method: str                              # full_payment | partial_payment | installments
+    method: str                              # full_payment | partial_payment | installments | wait
     payments: list[tuple[date, float]] = field(default_factory=list)
     total_cost: float = 0.0                  # what the user pays in total, fees included
     option_id: str = ""
@@ -267,6 +267,36 @@ def rank_plans(plans: list[Plan]) -> list[Plan]:
 # ---------------------------------------------------------------------------
 
 
+def _format_plan_amount(value: float) -> str:
+    """One money value inside a payment_plan entry.
+
+    A whole number is written without decimals and anything else with exactly
+    two, which is the grammar the solved rows use: a requested_amount of 996.6
+    appears in the plan as "996.60" and one of 38016 appears as "38016". Note
+    this is deliberately not the same rule as the amount_safe_to_pay column,
+    which strips trailing zeros (17229139.2, 603.3, 433.4). Two columns, two
+    formats, both read off the ground truth rather than assumed to match.
+    """
+    rounded = round(value, 2)
+    if abs(rounded - round(rounded)) < 1e-9:
+        return str(int(round(rounded)))
+    return f"{rounded:.2f}"
+
+
+def format_payment_plan(plan: Plan | None) -> str:
+    """A Plan as the output contract's chronological YYYY-MM-DD:amount string.
+
+    Returns the literal "none" when there is nothing to schedule, which is the
+    case for not_recommended and for any method whose plan could not be built.
+    """
+    if plan is None or not plan.payments:
+        return "none"
+    return "|".join(
+        f"{when.isoformat()}:{_format_plan_amount(amount)}"
+        for when, amount in sorted(plan.payments, key=lambda payment: payment[0])
+    )
+
+
 def classify(
     request: dict, profile: dict, state: FinancialState, requested_amount: float
 ) -> tuple[str, str, Plan | None]:
@@ -302,8 +332,16 @@ def classify(
         )
 
     # 4. No plan now, but capacity arrives inside the forecast: wait for it.
+    #    Waiting is a plan, not the absence of one. The solved rows show a wait
+    #    carrying a single full payment on the first safe date (request_03, 04,
+    #    08, 13, 18 and 23 all do), so it is built here rather than left as None
+    #    and rendered as "none".
     if earliest is not None:
-        return "affordable_later", "wait", None
+        return "affordable_later", "wait", Plan(
+            method="wait",
+            payments=[(earliest, requested_amount)],
+            total_cost=requested_amount,
+        )
 
     # 5. A safe full payment never happens inside the horizon and no eligible
     #    plan carries it. Do not proceed.
