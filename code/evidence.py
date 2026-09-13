@@ -313,6 +313,66 @@ def _positive_amount(value) -> float | None:
     return abs(amount) if amount > 0 else None
 
 
+CURRENCY_SYMBOLS: dict[str, list[str]] = {
+    "INR": ["₹", "\u20b9", "Rs.", "Rs", "INR"],
+    "USD": ["$", "USD"],
+    "EUR": ["€", "EUR"],
+    "GBP": ["£", "GBP"],
+    "IDR": ["Rp.", "Rp", "IDR"],
+    "ZAR": ["R", "ZAR"],
+}
+
+
+def _recover_amount_from_quote(quote: str | None, currency: str | None) -> float | None:
+    """Recover an amount from the quote when the model returned amount null.
+
+    ONLY succeeds when amount is null and the quote contains exactly one
+    unambiguous monetary value matching the parsed currency.
+    Returns None if:
+    - quote or currency is absent
+    - currency is not recognized
+    - quote contains conflicting currency indicators from other currencies
+    - quote contains zero or multiple monetary values matching the currency
+      (treating ambiguous amounts as confirmed is explicitly forbidden)
+    - parsed amount is not a positive number
+    """
+    if not quote or not currency:
+        return None
+    curr = currency.strip().upper()
+    symbols = CURRENCY_SYMBOLS.get(curr)
+    if not symbols:
+        return None
+
+    # Check for presence of conflicting currency symbols/codes from other currencies.
+    for other_curr, other_syms in CURRENCY_SYMBOLS.items():
+        if other_curr == curr:
+            continue
+        for sym in other_syms:
+            if sym.isalpha():
+                if re.search(rf"\b{re.escape(sym)}\b", quote, re.IGNORECASE):
+                    return None
+            else:
+                if sym in quote:
+                    return None
+
+    escaped_syms = "|".join(re.escape(s) for s in symbols)
+    num_pattern = r"\d+(?:,\d{2,3})*(?:\.\d{1,2})?"
+    pattern = rf"(?i)(?:(?:{escaped_syms})\s*({num_pattern})|({num_pattern})\s*(?:{escaped_syms}))"
+    matches = list(re.finditer(pattern, quote))
+
+    if len(matches) != 1:
+        return None
+
+    m = matches[0]
+    num_str = m.group(1) or m.group(2)
+    clean_str = num_str.replace(",", "")
+    try:
+        val = float(clean_str)
+        return val if val > 0 else None
+    except ValueError:
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Surface 1: images
 # ---------------------------------------------------------------------------
@@ -392,7 +452,12 @@ def extract_image_amounts(verbose: bool = True) -> dict[str, tuple[float, str]]:
         event_id = row["related_event_id"]
 
         amount = _positive_amount(parsed.get("amount"))
-        if amount is None or parsed.get("confidence") == "low":
+        if amount is None:
+            amount = _recover_amount_from_quote(parsed.get("quote"), parsed.get("currency"))
+            if amount is not None and verbose:
+                print(f"  [recovered] {row['image_id']} -> {event_id}: {amount} {event['currency']} from quote")
+
+        if amount is None or (parsed.get("confidence") == "low" and parsed.get("amount") is not None):
             if verbose:
                 print(f"  [unread] {row['image_id']} -> {event_id}: left blank, never zeroed")
             continue
