@@ -923,3 +923,122 @@ logic.**
    ended when the actual error was read instead of the one that fitted the last incident:
    a 45-second timeout tuned for single documents was throttling 25-document batches and
    looked exactly like the quota failure that had happened an hour earlier.
+
+## D16. Currency audit: the accuracy gap is not a magnitude bug
+
+Per-currency accuracy on the 25 solved rows looked alarming, and the graded set is 40
+percent EUR and ZAR, the two weakest currencies. The hypothesis to test: home currencies
+span four orders of magnitude (median request 1,442 EUR against 21,717,000 IDR), so any
+absolute constant sitting in a float comparison does a different job in each currency
+while looking correct in testing.
+
+Reproduced first, unchanged:
+
+```
+cur    n    amount  status  method    plan  earliest  changes   overall
+EUR    8       12%     50%     62%     62%       50%      88%     54.2%
+INR    7       14%    100%     86%     86%       71%     100%     76.2%
+IDR    5        0%     80%     80%     60%       60%      80%     60.0%
+ZAR    4        0%     25%     25%     25%       25%     100%     33.3%
+USD    1        0%      0%    100%    100%        0%       0%     33.3%
+ALL   25        8%     64%     68%     64%       52%      88%     57.3%
+```
+
+### The table is not evidence of anything
+
+Before acting on it, ask whether it can be distinguished from noise. Under the null that
+every currency shares the pooled 64 percent status accuracy, no currency's deviation is
+significant: EUR p=0.47, IDR p=0.66, ZAR p=0.14, USD p=0.36, INR p=0.055, none surviving a
+Bonferroni correction for the five comparisons being made. A permutation test on the whole
+spread, shuffling which row belongs to which currency and keeping group sizes, puts the
+observed INR-to-USD gap at p=0.123, and p=0.055 with the n=1 USD group dropped. The ZAR 1/4
+carries a 95 percent Wilson interval of [5%, 70%] and the INR 7/7 one of [65%, 100%]: both
+overlap the pooled rate, and each other. **At n=4 and n=1 this table cannot resolve a real
+effect from a coin flip, so it cannot license a currency-specific change.** It was worth
+auditing anyway, because a magnitude bug is a correctness defect whether or not 25 rows
+happen to be powered to detect it. The audit had to stand on the code, not on the table.
+
+### Every absolute constant, and how often it decides an outcome
+
+Each was instrumented and measured across all 275 rows (250 graded plus 25 sample),
+counting the rows where the constant, rather than the arithmetic, picks the result.
+
+| # | Constant | Where | Rows it decides |
+|---|---|---|---|
+| F1 | `EPSILON = 0.01` | `plan_is_safe` minimum-balance check | **0 of 275** |
+| F2 | `EPSILON = 0.01` | partial-payment "is it a real split" gate | **0 of 275** |
+| F3 | `FULL_COVERAGE = 0.999` | `affordable_now` test | **0 of 275**, no row has coverage in [0.999, 1.0) |
+| F4 | no tolerance at all | `earliest_date_for_full_payment` | **0 of 275**, granting it the F1 slack moves no date |
+| F5 | `round(total_cost, 2)` | `rank_plans` sort key | **0 of 275**; ranking runs on 6 rows, smallest genuine cost gap is 17.63, or 1,763x the quantum |
+| F6 | `abs(abs(e.amount) - one_off) < 0.01` | one-off dedup in `financial_state.py` | **0 of 275**; tightest near-miss pair differs by 39% of its own value, so an absolute and a relative test agree everywhere |
+| F7 | `NEAR_MISS_COVERAGE = 0.95` | near-miss band | 5 graded rows (INR 1, ZAR 4). A true ratio, currency neutral, and explicitly fitted to sample rows, so out of scope |
+
+The reason nothing is decisive is visible in the scale: 0.01 is between 5e-10 and 6e-5 of a
+request depending on currency, and the underlying data is quantised to whole or 1-to-2
+decimal units in every currency, so no boundary ever lands that close.
+
+Two items cleared outright. **Coverage is a true ratio**, `safe_today / requested_amount`,
+dimensionless and currency neutral; both thresholds compare against it. **FX carries no
+rounding and cannot compound**: `_convert` returns `amount * rate` unrounded, and all four
+call sites pass a raw source amount, so each of the 140 foreign-currency rows is converted
+exactly once from its own value. No converted figure is ever the input to another
+conversion.
+
+### Should IDR and INR round differently?
+
+No, and the ground truth settles it rather than intuition. No money value anywhere in the
+solved rows carries more than 2 decimals, and the large-magnitude currencies do carry
+fractions: IDR `17229139.2`, INR `87170.56` and `243849.58`. A currency-specific rounding
+rule would have destroyed exactly those values. The existing formatter is currency neutral
+and matches the ground-truth grammar in all five currencies.
+
+### What the residual error actually is
+
+The wholly-wrong rows were diagnosed individually. They are trough estimation, in both
+directions: on `request_12` (ZAR) the forecast is 5,547 too pessimistic and kills a valid
+3-payment plan; on `request_13` (EUR) it is 736 too optimistic. The decisive measurement is
+how that error scales. Recovering the implied trough from the ground truth on the 16 rows
+where neither side is at the requested-amount cap:
+
+```
+cur   n   median |error| in units   as % of 90d outflow
+EUR   5                     39.74                  1.0%
+ZAR   1                  3,806.66                  3.1%
+INR   5                 10,436.69                  3.8%
+IDR   5                325,975.20                  0.5%
+```
+
+The unit error spans 8,200x across currencies, tracking magnitude; as a fraction it sits in
+a narrow 0.5 to 3.8 percent band. **The error is proportional, which is the signature of no
+absolute constant being involved.** An absolute constant would produce the opposite: similar
+unit errors and wildly different percentages. The sign split is also balanced within every
+currency (INR 5 high / 1 low, EUR 4/3, IDR 2/3, ZAR 2/2), so no currency is systematically
+biased. This is the D9 trough error, already measured at roughly 5 percent of a month of
+recurring spend, and it is out of scope here by instruction.
+
+### Outcome: a clean negative, and one change that is not a fix
+
+The primary hypothesis is falsified from two independent directions: no absolute constant
+is decisive on any of the 275 rows, and the residual error is scale-free. **Nothing found
+here explains the per-currency gap, because there is no reliably measurable gap to explain.**
+
+One change was still made, on correctness grounds rather than accuracy. `plan_is_safe`
+compared against `minimum_balance_to_keep - 0.01`, which admits a plan finishing a hundredth
+of a unit below the floor; AGENTS.md section 6.3 says the balance must never fall below it.
+The comment justified the slack as protection against repeating-decimal rounding, but float64
+noise at these magnitudes is about 2e-8 at IDR scale and 2e-12 at EUR scale, so 0.01 was
+between 500,000x and 5,000,000,000x larger than its stated purpose, by a factor that differed
+per currency. It is now `SAFETY_RELATIVE_TOLERANCE = 1e-9` scaled to the magnitudes being
+compared, which does what the comment always claimed, in every currency, and restores the
+literal contract. The partial-payment gate moved to the same relative basis.
+
+Verified behaviour-preserving rather than assumed: the 25-row sample output is byte-identical
+(md5 `18090ad3a43ca302ccb5fe4d5dccca40` before and after), all 250 graded rows recomputed in
+memory match the committed `output.csv` in all 8 columns with 0 cells changed, and all 29
+test checks still pass. The per-currency table and every column score are unchanged:
+amount 8.0, status 64.0, method 68.0, plan 64.0, earliest 52.0, changes 88.0, overall 57.3.
+
+**This is recorded as a negative result, not a win.** The honest summary is that two hours of
+audit removed a latent magnitude dependence that was never firing, and moved no number. The
+next agent should not re-audit absolute constants; the accuracy is in the trough, and the
+per-currency breakdown of 25 rows is too small to steer by.

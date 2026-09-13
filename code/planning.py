@@ -57,9 +57,26 @@ FULL_COVERAGE = 0.999
 # clusters is wide, which is what makes a band usable here at all.
 NEAR_MISS_COVERAGE = 0.95
 
-# Money comparisons are made with a small tolerance so a repeating-decimal
-# instalment split does not read as a breach of the minimum balance.
-EPSILON = 0.01
+# Money comparisons carry a tolerance so a repeating-decimal instalment split
+# does not read as a breach of the minimum balance. The tolerance is RELATIVE to
+# the numbers being compared, never a fixed number of currency units. Home
+# currencies in this dataset span four orders of magnitude (a median request is
+# 1,442 EUR and 21,717,000 IDR), so a fixed 0.01 means a hundredth of a euro in
+# one row and a rounding artefact far below a rupiah in another: the same
+# constant doing a different job per currency. 1e-9 relative sits far above
+# float64 noise on every magnitude here (~2e-8 at IDR scale, ~2e-12 at EUR
+# scale) and far below any real money boundary in any currency, which is what
+# "ignore arithmetic dust, honour every real shortfall" actually requires.
+#
+# It also keeps AGENTS.md section 6.3 literally true. A fixed 0.01 admitted a
+# plan that finished 0.01 below minimum_balance_to_keep; the contract says the
+# balance must never fall below it.
+SAFETY_RELATIVE_TOLERANCE = 1e-9
+
+
+def _tolerance(*values: float) -> float:
+    """Comparison dust for the largest magnitude involved, in that row's own currency."""
+    return SAFETY_RELATIVE_TOLERANCE * max((abs(value) for value in values), default=0.0)
 
 
 @dataclass
@@ -164,7 +181,9 @@ def plan_is_safe(state: FinancialState, payments: list[tuple[date, float]]) -> b
     checkpoints.update(payment_date for payment_date, _ in payments)
     for when in sorted(checkpoints):
         paid = sum(amount for payment_date, amount in payments if payment_date <= when)
-        if balance_at(state, when) - paid < state.minimum_balance_to_keep - EPSILON:
+        projected = balance_at(state, when) - paid
+        floor = state.minimum_balance_to_keep
+        if projected < floor - _tolerance(projected, floor, paid):
             return False
     return True
 
@@ -226,7 +245,9 @@ def eligible_plans(
         and (request.get("allows_partial_payment", "").strip().lower() == "true")
         and earliest is not None
         and earliest > request_date
-        and EPSILON < safe_today < requested_amount - EPSILON
+        and _tolerance(requested_amount)
+        < safe_today
+        < requested_amount - _tolerance(requested_amount)
         and (deadline is None or earliest <= deadline)
     ):
         payments = [(request_date, safe_today), (earliest, requested_amount - safe_today)]
