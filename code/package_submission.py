@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import subprocess
 import sys
 import zipfile
@@ -128,6 +129,9 @@ def run_gates(root: Path, files: list[str]) -> bool:
         results.append(gate("output.csv passes specification verification (15 rules)",
                             verify_out.returncode == 0, detail))
 
+        # 7. Gate 10: Determinism across two consecutive pipeline runs.
+        results.append(gate(*determinism_gate(root, out_csv)))
+
     return all(results)
 
 
@@ -206,6 +210,45 @@ def usage_report_gate(path: Path) -> tuple[str, bool, str]:
         return label, False, "no model is named in backticks"
 
     return label, True, f"{len(text.splitlines())} lines, totals row present"
+
+
+def determinism_gate(root: Path, out_csv: Path) -> tuple[str, bool, str]:
+    """Gate 10: Run the full pipeline twice, compare SHA-256 of output.csv across runs.
+
+    Guarantees byte-identical reproduction. If a run fails or produces a mismatch,
+    output.csv is restored so a half-written file is never left behind.
+    """
+    label = "output.csv is byte-identical across two runs"
+    prior_bytes = out_csv.read_bytes() if out_csv.is_file() else None
+
+    # Run 1
+    run1 = subprocess.run(
+        [sys.executable, str(root / "code" / "main.py")],
+        capture_output=True, text=True, cwd=str(root),
+    )
+    if run1.returncode != 0 or not out_csv.is_file():
+        if prior_bytes is not None:
+            out_csv.write_bytes(prior_bytes)
+        return label, False, f"run 1 failed (exit code {run1.returncode})"
+    bytes1 = out_csv.read_bytes()
+    hash1 = hashlib.sha256(bytes1).hexdigest()
+
+    # Run 2
+    run2 = subprocess.run(
+        [sys.executable, str(root / "code" / "main.py")],
+        capture_output=True, text=True, cwd=str(root),
+    )
+    if run2.returncode != 0 or not out_csv.is_file():
+        out_csv.write_bytes(bytes1)
+        return label, False, f"run 2 failed (exit code {run2.returncode})"
+    bytes2 = out_csv.read_bytes()
+    hash2 = hashlib.sha256(bytes2).hexdigest()
+
+    if hash1 != hash2:
+        out_csv.write_bytes(bytes1)
+        return label, False, f"mismatch ({hash1[:8]}... != {hash2[:8]}...)"
+
+    return label, True, f"SHA-256 match ({hash1[:8]}...)"
 
 
 def main() -> int:
