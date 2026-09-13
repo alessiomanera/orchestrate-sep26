@@ -1,4 +1,4 @@
-"""Independent validator checking output.csv against the specification (15 rules).
+"""Independent validator checking output.csv against specification (Tier 1) and semantic consistency (Tier 2).
 
 Verifies output.csv rows against problem_statement.md and dataset files:
 - dataset/requests.csv
@@ -6,7 +6,7 @@ Verifies output.csv rows against problem_statement.md and dataset files:
 - dataset/request_payment_options.csv
 - dataset/financial_events.csv
 
-Checks 15 rules:
+Tier 1: Specification Rules (15 rules, hard requirement, failures block submission):
 1.  Exactly the 8 required columns, in the required order, no extras.
 2.  One row per request_id in dataset/requests.csv, in that file's own row order, 250 rows.
 3.  No required field empty, except earliest_date_for_full_payment which may be empty.
@@ -41,6 +41,11 @@ Checks 15 rules:
     not appear in both a stop and a reduce_to. For reduce_to, the new amount must be greater
     than or equal to that event's minimum_allowed_amount where one is present.
 15. decision_explanation is non-empty on every row.
+
+Tier 2: Semantic Consistency Checks (heuristics, soft warnings for domain anomalies):
+H1. affordable_later with earliest_date_for_full_payment after desired_completion_date.
+H2. not_affordable while >50% safe today and partial payment is available and accepted.
+H3. not_recommended while full requested amount is safe today.
 
 Usage:
     python code/evaluation/verify_output.py
@@ -127,11 +132,14 @@ def load_dataset(dataset_dir: Path) -> tuple[
 def verify_output(
     output_path: Path,
     dataset_dir: Path,
-) -> tuple[bool, list[tuple[int, str, list[str]]]]:
-    """Verify output.csv against all 15 rules.
+    include_heuristics: bool = False,
+):
+    """Verify output.csv against all 15 specification rules (Tier 1) and optional heuristics (Tier 2).
 
     Returns:
         (all_passed, [(rule_num, description, list_of_violating_request_ids_or_reasons)])
+        or with include_heuristics=True:
+        (all_passed, spec_results, heuristic_warnings)
     """
     if not output_path.is_file():
         return False, [(0, "output.csv existence", [f"File not found: {output_path}"])]
@@ -510,7 +518,102 @@ def verify_output(
     results.append((15, "decision_explanation non-empty on every row", r15_violations))
 
     total_violations = sum(len(v) for _, _, v in results)
-    return total_violations == 0, results
+    passed = total_violations == 0
+    if include_heuristics:
+        heuristics = check_semantic_heuristics(
+            output_rows, requests_by_id, profiles_by_user, options_by_request, user_events
+        )
+        return passed, results, heuristics
+    return passed, results
+
+
+def check_semantic_heuristics(
+    output_rows: list[dict[str, str]],
+    requests_by_id: dict[str, dict[str, str]],
+    profiles_by_user: dict[str, dict[str, str]],
+    options_by_request: dict[str, list[dict[str, str]]],
+    user_events: dict[str, dict[str, dict[str, str]]],
+) -> list[tuple[str, str, list[str]]]:
+    """Tier 2 checks: semantic-consistency heuristics.
+
+    These encode inferred domain patterns rather than stated specification rules.
+    Violations produce warnings rather than failing the validation run, highlighting
+    anomalous rows for audit.
+    """
+    warnings: list[tuple[str, str, list[str]]] = []
+
+    # H1: affordable_later with earliest_date_for_full_payment past desired_completion_date
+    h1_items: list[str] = []
+    for r in output_rows:
+        rid = r.get("request_id", "")
+        if r.get("affordability_status") != "affordable_later":
+            continue
+        earliest_str = (r.get("earliest_date_for_full_payment") or "").strip()
+        req = requests_by_id.get(rid)
+        if not req or not earliest_str:
+            continue
+        deadline_str = (req.get("desired_completion_date") or "").strip()
+        if not deadline_str:
+            continue
+        try:
+            ed = datetime.strptime(earliest_str, "%Y-%m-%d").date()
+            dd = datetime.strptime(deadline_str, "%Y-%m-%d").date()
+            if ed > dd:
+                diff_days = (ed - dd).days
+                h1_items.append(f"{rid} (earliest {earliest_str} > deadline {deadline_str}, +{diff_days}d)")
+        except Exception:
+            continue
+    warnings.append(("H1", "affordable_later with earliest_date after desired_completion_date", h1_items))
+
+    # H2: not_affordable while large fraction safe today and partial payment available and accepted
+    h2_items: list[str] = []
+    for r in output_rows:
+        rid = r.get("request_id", "")
+        if r.get("affordability_status") != "not_affordable":
+            continue
+        req = requests_by_id.get(rid)
+        if not req:
+            continue
+        prof = profiles_by_user.get(req.get("user_id", ""))
+        if not prof:
+            continue
+        try:
+            requested = Decimal(req.get("requested_amount", "0"))
+            safe = Decimal(r.get("amount_safe_to_pay", "0"))
+            if requested <= 0:
+                continue
+            ratio = safe / requested
+        except Exception:
+            continue
+        user_methods = {
+            m.strip()
+            for m in (prof.get("payment_methods_user_will_consider") or "").split("|")
+            if m.strip()
+        }
+        allows_partial = (req.get("allows_partial_payment") or "").strip().lower() == "true"
+        if ratio > Decimal("0.5") and allows_partial and "partial_payment" in user_methods:
+            h2_items.append(f"{rid} (safe {safe}/{requested} = {ratio * 100:.1f}%, partial available and accepted)")
+    warnings.append(("H2", "not_affordable with >50% safe and partial payment available and accepted", h2_items))
+
+    # H3: not_recommended while full requested amount is safe today
+    h3_items: list[str] = []
+    for r in output_rows:
+        rid = r.get("request_id", "")
+        if r.get("recommended_payment_method") != "not_recommended":
+            continue
+        req = requests_by_id.get(rid)
+        if not req:
+            continue
+        try:
+            requested = Decimal(req.get("requested_amount", "0"))
+            safe = Decimal(r.get("amount_safe_to_pay", "0"))
+            if safe >= requested and requested > 0:
+                h3_items.append(f"{rid} (amount_safe_to_pay {safe} >= requested {requested})")
+        except Exception:
+            continue
+    warnings.append(("H3", "not_recommended while full requested amount is safe today", h3_items))
+
+    return warnings
 
 
 def main() -> int:
@@ -531,8 +634,9 @@ def main() -> int:
     output_path = Path(args.output).resolve() if args.output else (root / "output.csv")
     dataset_dir = Path(args.dataset).resolve() if args.dataset else (root / "dataset")
 
-    print(f"Verifying {output_path.name} against specification (15 rules)...")
-    passed, results = verify_output(output_path, dataset_dir)
+    print(f"Verifying {output_path.name}...")
+    print(f"\n--- Tier 1: Specification Rules (15 rules, hard requirement) ---")
+    passed, results, heuristics = verify_output(output_path, dataset_dir, include_heuristics=True)
 
     for rule_num, desc, violations in results:
         status = "PASS" if not violations else "FAIL"
@@ -545,9 +649,22 @@ def main() -> int:
                 sample_str += f", ... ({len(violations) - 5} more)"
             print(f"           Examples: {sample_str}")
 
+    print(f"\n--- Tier 2: Semantic Consistency Checks (heuristics, warnings only) ---")
+    for code, desc, warnings in heuristics:
+        status = "WARN" if warnings else "OK"
+        count_str = f"{len(warnings)} warning(s)" if warnings else "0 warnings"
+        print(f"  Heuristic {code} ({desc}): {count_str} [{status}]")
+        if warnings:
+            sample = warnings[:5]
+            sample_str = ", ".join(sample)
+            if len(warnings) > 5:
+                sample_str += f", ... ({len(warnings) - 5} more)"
+            print(f"             Examples: {sample_str}")
+
     total_violations = sum(len(v) for _, _, v in results)
+    total_warnings = sum(len(w) for _, _, w in heuristics)
     if passed:
-        print(f"\nResult: PASS (0 violations across all 15 rules)")
+        print(f"\nResult: PASS (0 violations across all 15 rules; {total_warnings} heuristic warning(s))")
         return 0
     else:
         print(f"\nResult: FAIL ({total_violations} total violation(s) across 15 rules)")

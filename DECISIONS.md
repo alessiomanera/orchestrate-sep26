@@ -1042,3 +1042,68 @@ amount 8.0, status 64.0, method 68.0, plan 64.0, earliest 52.0, changes 88.0, ov
 audit removed a latent magnitude dependence that was never firing, and moved no number. The
 next agent should not re-audit absolute constants; the accuracy is in the trough, and the
 per-currency breakdown of 25 rows is too small to steer by.
+
+---
+
+## D17. Semantic classification audit, revert criterion, and two-tier validator
+
+**Date:** 2026-09-13
+**Status:** in force
+
+**The audit finding.** An audit of `output.csv` against `problem_statement.md` identified that 23 of
+250 graded rows (9.2%) had `affordability_status == 'affordable_later'` with
+`earliest_date_for_full_payment > desired_completion_date`. If financial capacity only arrives
+after the user's deadline, waiting cannot complete the request by the deadline, which is the
+primary ranking criterion in `problem_statement.md`.
+
+**Ground truth derivation (Task 1).** Examination of all 25 solved rows in `sample_requests.csv`
+confirmed the organizers' actual rule:
+1. All 6 ground-truth rows with `affordable_later` (`request_03, 04, 08, 13, 18, 23`) have
+   `earliest_date_for_full_payment <= desired_completion_date` (5 exact matches at +0d; 1 row
+   `request_04` has earliest date 4 days before deadline).
+2. The 3 ground-truth rows where `earliest_date_for_full_payment > desired_completion_date`
+   (`request_06, 11, 21`) are classified as `affordable_with_plan` because permitted spending
+   changes enable completion on request date before deadline.
+3. Ground truth never emits `affordable_later` when earliest date is past deadline.
+
+**Experimental test and the Revert Criterion (Task 4).** When `code/planning.py::classify` was
+modified to enforce `deadline is None or earliest <= deadline` for `affordable_later`:
+- On the 250 graded rows, all 23 anomalous rows flipped to `not_affordable, not_recommended`.
+- On the 25 sample requests, `request_04` flipped from `(affordable_later, wait)` to
+  `(not_affordable, not_recommended)`. In ground truth, `request_04` has earliest date `2024-06-15`
+  and deadline `2024-06-19` (safe before deadline). However, our conservative forecast in
+  `financial_state.py` produces `2024-07-15` (one month late). Under the strict deadline check,
+  our prediction diverged from ground truth.
+- As a result, sample evaluation accuracy dropped:
+  `affordability_status`: 64.0% -> 60.0% (-4.0%, -1 row)
+  `recommended_payment_method`: 68.0% -> 64.0% (-4.0%, -1 row)
+  `overall`: 57.3% -> 56.0% (-1.3%, -2 points)
+- `code/tests/test_score_regression.py` failed on the locked baseline thresholds.
+- Under the explicit Revert Criterion ("if any column falls below its baseline, revert the entire
+  change and say so"), the modification in `code/planning.py` was reverted to protect the proven
+  baseline against regression.
+
+**Investigation of smaller anomalies (Task 2).**
+1. *9 graded rows with not_affordable and safe_today / requested > 0.5:* All 9 rows are 100%
+   correct under the spec. In 6 rows (`request_59, 61, 75, 111, 213, 237`), the request strictly
+   forbids partial payment (`allows_partial_payment: false`). In 3 rows (`request_165, 173, 215`),
+   the request allows partial payment, but the user profile rejects partial payment (`user_165`
+   accepts `full_payment` only; `user_173` and `user_215` accept `installments` only, and all
+   available installment options breach the minimum balance). Recommending partial payment would
+   directly violate Rule 8 and user preferences.
+2. *1 graded row with not_recommended and 100% safe today (`request_241`):* Correct and defensible.
+   `user_241` accepts only `installments` and `partial_payment`, explicitly rejecting `full_payment`.
+   The seller forbids partial payment, and both available installment options breach minimum
+   balance. Recommending `full_payment` would violate user preferences.
+
+**Two-tier validator architecture (Task 3).** To make semantic anomalies detectable without
+artificially failing valid edge cases, `code/evaluation/verify_output.py` was structured into two
+distinct tiers:
+- **Tier 1 (Specification Rules):** 15 hard contract requirements. Any violation causes exit code 1
+  and blocks packaging.
+- **Tier 2 (Semantic Consistency Checks):** Heuristic domain checks that emit warnings without
+  failing the build (exit code 0):
+  - `H1`: `affordable_later` with earliest date past deadline (23 warnings on baseline output).
+  - `H2`: `not_affordable` with >50% safe and partial payment available and accepted (0 warnings).
+  - `H3`: `not_recommended` while full amount is safe today (1 warning, `request_241`).
+

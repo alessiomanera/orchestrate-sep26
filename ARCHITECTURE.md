@@ -82,7 +82,7 @@ a Python number.
 | `code/main.py` | 164 | reads requests, renders the eight columns, writes `output.csv` | any decision logic |
 | `code/usage.py` | 159 | writes `evaluation/usage_report.md` from measured counts | estimates or reconstructions |
 | `code/package_submission.py` | 232 | submission gates and archive build | anything the pipeline runs |
-| `code/evaluation/verify_output.py` | 558 | independent validation of output.csv against all 15 specification rules | producing or modifying output |
+| `code/evaluation/verify_output.py` | 675 | independent validation of output.csv against 15 spec rules (Tier 1) and semantic heuristics (Tier 2) | producing or modifying output |
 
 The seam that matters most is between `financial_state.py` and `planning.py`. The forecast
 produces a balance timeline and nothing else; planning consumes it and never reaches back into
@@ -340,6 +340,20 @@ vacuously, it was independently negative-tested by corrupting output.csv in eigh
 All eight corruptions were successfully detected and rejected with non-zero exit codes,
 providing concrete evidence that the validator fires on violations as designed.
 
+### Two-tier validator architecture
+
+The validator (`code/evaluation/verify_output.py`) implements two clearly separated tiers:
+- **Tier 1 (Specification Rules):** 15 strict contract requirements that block packaging if violated (exit code 1).
+- **Tier 2 (Semantic Consistency Checks):** Domain heuristics that identify potential classification anomalies as warnings without failing the build (exit code 0).
+
+| Check | Description | Output count | Status |
+|---|---|---|---|
+| H1 | affordable_later with earliest_date past desired_completion_date | 23 | WARN |
+| H2 | not_affordable while >50% safe and partial payment available and accepted | 0 | OK |
+| H3 | not_recommended while full requested amount is safe today | 1 (request_241) | WARN |
+
+The 23 warnings on H1 reflect a known trade-off documented in [D17](DECISIONS.md) and Section 8 below. H2 has zero warnings because all requests where a large fraction is safe either forbid partial payment or the user profile explicitly declines it. H3 flags `request_241` where full payment is safe today, but the user strictly accepts only installments or partial payment; the seller forbids partial payment, and all installment options breach minimum balance, making `not_recommended` the only valid recommendation.
+
 ---
 
 ## 8. Known limitations
@@ -386,13 +400,15 @@ run rather than silently dropped. Reasoning in [D12](DECISIONS.md).
 
 **16 of 16 blank amounts resolved.** All 16 events with missing amounts are now resolved. `image_04` (linked to `event_1700`) was extracted by the vision model with `amount: null` at low confidence, but its verbatim quote field contained `"Item Bill\n\u20b92854.00"` with currency `INR` parsed correctly. The pipeline recovers this amount deterministically with zero model calls using a strict quote recovery rule: recovery occurs if and only if amount is null and the quote contains exactly one unambiguous monetary value matching the parsed currency. Where a quote contains multiple amounts, conflicting currencies, ambiguous numbers, or non-positive values, recovery is strictly refused in compliance with the rule that ambiguous amounts must never be treated as confirmed cash.
 
+**`affordable_later` past desired completion date (23 graded rows).** A semantic audit revealed that in all 25 solved sample requests, `affordable_later` strictly has `earliest_date_for_full_payment <= desired_completion_date`. In our baseline output, 23 of 250 graded rows have `earliest_date > desired_completion_date`. However, strictly enforcing `earliest <= desired_completion_date` in `code/planning.py::classify` causes `request_04` in the sample set to flip from `(affordable_later, wait)` to `(not_affordable, not_recommended)`. In ground truth, `request_04` has earliest date `2024-06-15` and deadline `2024-06-19` (safe before deadline), but our conservative forecast calculates `2024-07-15` (+26 days late). Enforcing the deadline check regressed sample `affordability_status` from 64.0% to 60.0% and `recommended_payment_method` from 68.0% to 64.0%. Under the project's strict Revert Criterion, the change was reverted to protect verified baseline accuracy, and the pattern is monitored via Tier 2 heuristic H1 in the validator. Full analysis in [D17](DECISIONS.md).
+
 ---
 
 ## 9. Where to look next
 
 | Question | File |
 |---|---|
-| Why any specific decision was made | [`DECISIONS.md`](DECISIONS.md), 15 numbered records |
+| Why any specific decision was made | [`DECISIONS.md`](DECISIONS.md), 17 numbered records |
 | How to set up and run it | [`code/README.md`](code/README.md) |
 | What the dataset actually contains | [`NOTES.md`](NOTES.md) |
 | What remains open | [`ROADMAP.md`](ROADMAP.md) |
