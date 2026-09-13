@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_110",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The prize proceeds have reached your account after withholding. The claim is now closed and there are no further scheduled payments.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_110\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The prize proceeds have reached your account after withholding. The claim is now closed and there are no further scheduled payments.\", \"currency\": null}",
+  "input_tokens": 132,
+  "output_tokens": 150,
+  "batched_with": 25
+}

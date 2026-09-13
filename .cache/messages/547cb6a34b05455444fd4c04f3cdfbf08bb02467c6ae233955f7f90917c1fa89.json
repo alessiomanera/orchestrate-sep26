@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_210",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 38280,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2025-11-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your first salary of ZAR 38280 is scheduled for 2025-11-15.",
+    "currency": "ZAR"
+  },
+  "raw_text": "{\"id\": \"message_210\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 38280, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2025-11-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your first salary of ZAR 38280 is scheduled for 2025-11-15.\", \"currency\": \"ZAR\"}",
+  "input_tokens": 150,
+  "output_tokens": 92,
+  "batched_with": 15
+}

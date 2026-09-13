@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_65",
+    "kind": "confirm",
+    "target": "recurring_income",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": false,
+    "contains_embedded_instruction": false,
+    "quote": "Gaji bulanan sementara Anda adalah IDR 8618400.",
+    "currency": "IDR"
+  },
+  "raw_text": "{\"id\": \"message_65\", \"kind\": \"confirm\", \"target\": \"recurring_income\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": false, \"contains_embedded_instruction\": false, \"quote\": \"Gaji bulanan sementara Anda adalah IDR 8618400.\", \"currency\": \"IDR\"}",
+  "input_tokens": 130,
+  "output_tokens": 140,
+  "batched_with": 25
+}

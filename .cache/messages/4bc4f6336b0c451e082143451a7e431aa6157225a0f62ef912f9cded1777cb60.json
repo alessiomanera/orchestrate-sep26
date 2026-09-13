@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_62",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1752,
+    "one_time_amount": 788.4,
+    "one_time_direction": "credit",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your regular salary for the next payroll is USD 1752. The same payroll includes a one-time arrears adjustment of USD 788.40.",
+    "currency": "USD"
+  },
+  "raw_text": "{\"id\": \"message_62\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1752, \"one_time_amount\": 788.4, \"one_time_direction\": \"credit\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your regular salary for the next payroll is USD 1752. The same payroll includes a one-time arrears adjustment of USD 788.40.\", \"currency\": \"USD\"}",
+  "input_tokens": 130,
+  "output_tokens": 140,
+  "batched_with": 25
+}

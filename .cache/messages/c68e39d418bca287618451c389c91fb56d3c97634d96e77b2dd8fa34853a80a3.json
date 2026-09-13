@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_28",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The prize proceeds have reached your account after withholding.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_28\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The prize proceeds have reached your account after withholding.\", \"currency\": null}",
+  "input_tokens": 131,
+  "output_tokens": 139,
+  "batched_with": 25
+}

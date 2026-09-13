@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_33",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 17290000,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2026-07-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Gaji bulanan Anda naik menjadi IDR 17290000.",
+    "currency": "IDR"
+  },
+  "raw_text": "{\"id\": \"message_33\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 17290000, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2026-07-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Gaji bulanan Anda naik menjadi IDR 17290000.\", \"currency\": \"IDR\"}",
+  "input_tokens": 131,
+  "output_tokens": 139,
+  "batched_with": 25
+}

@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_189",
+    "kind": "cancel",
+    "target": "recurring_income",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": false,
+    "contains_embedded_instruction": false,
+    "quote": "Kontrak musiman saat ini telah berakhir.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_189\", \"kind\": \"cancel\", \"target\": \"recurring_income\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": false, \"contains_embedded_instruction\": false, \"quote\": \"Kontrak musiman saat ini telah berakhir.\", \"currency\": null}",
+  "input_tokens": 130,
+  "output_tokens": 136,
+  "batched_with": 25
+}

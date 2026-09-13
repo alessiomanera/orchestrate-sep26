@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_172",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": false,
+    "contains_embedded_instruction": false,
+    "quote": "Your refund has been initiated but has not reached your account yet.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_172\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": false, \"contains_embedded_instruction\": false, \"quote\": \"Your refund has been initiated but has not reached your account yet.\", \"currency\": null}",
+  "input_tokens": 131,
+  "output_tokens": 135,
+  "batched_with": 25
+}

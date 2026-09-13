@@ -1,0 +1,17 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "images",
+  "parsed": {
+    "id": "image_01",
+    "document_type": "payslip",
+    "amount": 4365000,
+    "confidence": "high",
+    "contains_embedded_instruction": false,
+    "quote": "Net Pay\n: IDR\n4,365,000",
+    "currency": "IDR"
+  },
+  "raw_text": "{\"id\": \"image_01\", \"document_type\": \"payslip\", \"amount\": 4365000, \"confidence\": \"high\", \"contains_embedded_instruction\": false, \"quote\": \"Net Pay\\n: IDR\\n4,365,000\", \"currency\": \"IDR\"}",
+  "input_tokens": 1245,
+  "output_tokens": 89,
+  "batched_with": 4
+}

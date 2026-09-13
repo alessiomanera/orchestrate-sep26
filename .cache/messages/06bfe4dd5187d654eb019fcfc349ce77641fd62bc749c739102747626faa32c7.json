@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_11",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1661.0,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2026-01-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your first salary will be EUR 1661. The confirmed credit date is 2026-01-15.",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_11\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1661.0, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2026-01-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your first salary will be EUR 1661. The confirmed credit date is 2026-01-15.\", \"currency\": \"EUR\"}",
+  "input_tokens": 129,
+  "output_tokens": 144,
+  "batched_with": 25
+}

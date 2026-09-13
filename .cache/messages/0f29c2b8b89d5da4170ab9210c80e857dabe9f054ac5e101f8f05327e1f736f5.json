@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_100",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 2177.28,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your temporary monthly pay is USD 2177.28",
+    "currency": "USD"
+  },
+  "raw_text": "{\"id\": \"message_100\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 2177.28, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your temporary monthly pay is USD 2177.28\", \"currency\": \"USD\"}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

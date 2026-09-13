@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_76",
+    "kind": "amend",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": 1419,
+    "one_time_direction": "credit",
+    "effective_date": "2026-04-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The client approved an invoice payment of EUR 1419",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_76\", \"kind\": \"amend\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": 1419, \"one_time_direction\": \"credit\", \"effective_date\": \"2026-04-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The client approved an invoice payment of EUR 1419\", \"currency\": \"EUR\"}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

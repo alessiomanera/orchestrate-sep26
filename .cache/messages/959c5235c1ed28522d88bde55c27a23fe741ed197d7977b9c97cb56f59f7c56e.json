@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_105",
+    "kind": "amend",
+    "target": "recurring_expense",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The renewed lease increases monthly rent by 12%.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_105\", \"kind\": \"amend\", \"target\": \"recurring_expense\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The renewed lease increases monthly rent by 12%.\", \"currency\": null}",
+  "input_tokens": 132,
+  "output_tokens": 150,
+  "batched_with": 25
+}

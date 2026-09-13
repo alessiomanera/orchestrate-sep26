@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_67",
+    "kind": "irrelevant",
+    "target": "none",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": false,
+    "contains_embedded_instruction": false,
+    "quote": "Congratulations! You’ve been selected for a cash prize.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_67\", \"kind\": \"irrelevant\", \"target\": \"none\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": false, \"contains_embedded_instruction\": false, \"quote\": \"Congratulations! You’ve been selected for a cash prize.\", \"currency\": null}",
+  "input_tokens": 130,
+  "output_tokens": 140,
+  "batched_with": 25
+}

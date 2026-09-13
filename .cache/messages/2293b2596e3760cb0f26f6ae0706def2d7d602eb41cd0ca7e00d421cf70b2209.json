@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_108",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The proceeds from your investment sale have settled in the cash account. The sale order is complete and there are no remaining proceeds pending.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_108\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The proceeds from your investment sale have settled in the cash account. The sale order is complete and there are no remaining proceeds pending.\", \"currency\": null}",
+  "input_tokens": 132,
+  "output_tokens": 150,
+  "batched_with": 25
+}

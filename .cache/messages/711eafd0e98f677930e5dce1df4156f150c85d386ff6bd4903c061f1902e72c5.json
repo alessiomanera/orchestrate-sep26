@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_20",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1452.0,
+    "one_time_amount": 653.4,
+    "one_time_direction": "credit",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your regular salary for the next payroll is EUR 1452. The same payroll includes a one-time arrears adjustment of EUR 653.40.",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_20\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1452.0, \"one_time_amount\": 653.4, \"one_time_direction\": \"credit\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your regular salary for the next payroll is EUR 1452. The same payroll includes a one-time arrears adjustment of EUR 653.40.\", \"currency\": \"EUR\"}",
+  "input_tokens": 129,
+  "output_tokens": 144,
+  "batched_with": 25
+}

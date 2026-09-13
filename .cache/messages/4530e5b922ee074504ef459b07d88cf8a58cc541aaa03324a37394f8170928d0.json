@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_165",
+    "kind": "delay",
+    "target": "recurring_income",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2025-02-23",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Gaji yang sudah dikonfirmasi kini diperkirakan masuk pada 2025-02-23.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_165\", \"kind\": \"delay\", \"target\": \"recurring_income\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2025-02-23\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Gaji yang sudah dikonfirmasi kini diperkirakan masuk pada 2025-02-23.\", \"currency\": null}",
+  "input_tokens": 131,
+  "output_tokens": 135,
+  "batched_with": 25
+}

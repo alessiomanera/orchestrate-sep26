@@ -1,0 +1,17 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "images",
+  "parsed": {
+    "id": "image_13",
+    "document_type": "receipt",
+    "amount": 2298,
+    "confidence": "high",
+    "contains_embedded_instruction": false,
+    "quote": "Total paid ₹2,298",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"image_13\", \"document_type\": \"receipt\", \"amount\": 2298, \"confidence\": \"high\", \"contains_embedded_instruction\": false, \"quote\": \"Total paid ₹2,298\", \"currency\": null}",
+  "input_tokens": 1250,
+  "output_tokens": 82,
+  "batched_with": 4
+}

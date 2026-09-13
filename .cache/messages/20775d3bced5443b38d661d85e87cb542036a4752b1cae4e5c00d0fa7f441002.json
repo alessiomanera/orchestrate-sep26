@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_95",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 748,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2025-11-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your salary of EUR 748 is confirmed for 2025-11-15",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_95\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 748, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2025-11-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your salary of EUR 748 is confirmed for 2025-11-15\", \"currency\": \"EUR\"}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

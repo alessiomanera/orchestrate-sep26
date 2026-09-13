@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_124",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1672.0,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2024-06-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your first salary from the new employer is EUR 1672. It is confirmed for 2024-06-15.",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_124\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1672.0, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2024-06-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your first salary from the new employer is EUR 1672. It is confirmed for 2024-06-15.\", \"currency\": \"EUR\"}",
+  "input_tokens": 132,
+  "output_tokens": 150,
+  "batched_with": 25
+}

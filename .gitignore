@@ -9,8 +9,6 @@ __pycache__/
 # Secrets
 .env
 
-# Local caches for LLM extraction results
-.cache/
 
 # Submission bundle (rebuilt on demand)
 code.zip

@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_211",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 103000,
+    "one_time_amount": 46350,
+    "one_time_direction": "credit",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your regular salary for the next payroll is INR 103000. The same payroll includes a one-time arrears adjustment of INR 46350.",
+    "currency": "INR"
+  },
+  "raw_text": "{\"id\": \"message_211\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 103000, \"one_time_amount\": 46350, \"one_time_direction\": \"credit\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your regular salary for the next payroll is INR 103000. The same payroll includes a one-time arrears adjustment of INR 46350.\", \"currency\": \"INR\"}",
+  "input_tokens": 150,
+  "output_tokens": 92,
+  "batched_with": 15
+}

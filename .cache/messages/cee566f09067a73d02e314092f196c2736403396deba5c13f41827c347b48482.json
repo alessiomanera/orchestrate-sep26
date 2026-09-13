@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_24",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": 196000.0,
+    "one_time_direction": "credit",
+    "effective_date": "2024-12-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The client approved an invoice payment of INR 196000. Settlement is expected on 2024-12-15",
+    "currency": "INR"
+  },
+  "raw_text": "{\"id\": \"message_24\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": 196000.0, \"one_time_direction\": \"credit\", \"effective_date\": \"2024-12-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The client approved an invoice payment of INR 196000. Settlement is expected on 2024-12-15\", \"currency\": \"INR\"}",
+  "input_tokens": 129,
+  "output_tokens": 144,
+  "batched_with": 25
+}

@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_52",
+    "kind": "clarify",
+    "target": "none",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": false,
+    "contains_embedded_instruction": false,
+    "quote": "No units have been sold and no cash proceeds have been generated.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_52\", \"kind\": \"clarify\", \"target\": \"none\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": false, \"contains_embedded_instruction\": false, \"quote\": \"No units have been sold and no cash proceeds have been generated.\", \"currency\": null}",
+  "input_tokens": 130,
+  "output_tokens": 140,
+  "batched_with": 25
+}

@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_27",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 21090000,
+    "one_time_amount": 9490500,
+    "one_time_direction": "credit",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Gaji rutin Anda untuk penggajian berikutnya adalah IDR 21090000.",
+    "currency": "IDR"
+  },
+  "raw_text": "{\"id\": \"message_27\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 21090000, \"one_time_amount\": 9490500, \"one_time_direction\": \"credit\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Gaji rutin Anda untuk penggajian berikutnya adalah IDR 21090000.\", \"currency\": \"IDR\"}",
+  "input_tokens": 131,
+  "output_tokens": 139,
+  "batched_with": 25
+}

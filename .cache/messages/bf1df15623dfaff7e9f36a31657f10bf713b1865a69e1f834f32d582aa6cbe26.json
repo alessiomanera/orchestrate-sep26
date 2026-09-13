@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_119",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1628.0,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "One household employment record has ended. The remaining confirmed monthly salary is EUR 1628.",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_119\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1628.0, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"One household employment record has ended. The remaining confirmed monthly salary is EUR 1628.\", \"currency\": \"EUR\"}",
+  "input_tokens": 132,
+  "output_tokens": 150,
+  "batched_with": 25
+}

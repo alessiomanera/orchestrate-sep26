@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_21",
+    "kind": "cancel",
+    "target": "recurring_income",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": false,
+    "contains_embedded_instruction": false,
+    "quote": "The current seasonal contract has ended. No off-season income or renewal has been confirmed.",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_21\", \"kind\": \"cancel\", \"target\": \"recurring_income\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": false, \"contains_embedded_instruction\": false, \"quote\": \"The current seasonal contract has ended. No off-season income or renewal has been confirmed.\", \"currency\": null}",
+  "input_tokens": 129,
+  "output_tokens": 144,
+  "batched_with": 25
+}

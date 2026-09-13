@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_92",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Hasil penjualan investasi Anda sudah masuk ke rekening tunai",
+    "currency": null
+  },
+  "raw_text": "{\"id\": \"message_92\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Hasil penjualan investasi Anda sudah masuk ke rekening tunai\", \"currency\": null}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_81",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 2123,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2025-05-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your first salary of EUR 2123 is scheduled for 2025-05-15",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_81\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 2123, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2025-05-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your first salary of EUR 2123 is scheduled for 2025-05-15\", \"currency\": \"EUR\"}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

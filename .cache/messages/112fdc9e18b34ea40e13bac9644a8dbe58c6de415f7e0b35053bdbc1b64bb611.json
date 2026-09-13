@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_89",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1188,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2026-07-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your monthly salary has increased to EUR 1188",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_89\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1188, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2026-07-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your monthly salary has increased to EUR 1188\", \"currency\": \"EUR\"}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

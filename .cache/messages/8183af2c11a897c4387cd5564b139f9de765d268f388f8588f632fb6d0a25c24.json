@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_170",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1914,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2026-04-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Regular salary of EUR 1914 resumes on 2026-04-15.",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_170\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1914, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2026-04-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Regular salary of EUR 1914 resumes on 2026-04-15.\", \"currency\": \"EUR\"}",
+  "input_tokens": 131,
+  "output_tokens": 135,
+  "batched_with": 25
+}

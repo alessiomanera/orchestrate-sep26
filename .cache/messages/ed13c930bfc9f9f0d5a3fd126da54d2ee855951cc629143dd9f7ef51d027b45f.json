@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_93",
+    "kind": "amend",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": 15390000,
+    "one_time_direction": "credit",
+    "effective_date": "2025-08-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Klien menyetujui pembayaran faktur sebesar IDR 15390000",
+    "currency": "IDR"
+  },
+  "raw_text": "{\"id\": \"message_93\", \"kind\": \"amend\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": 15390000, \"one_time_direction\": \"credit\", \"effective_date\": \"2025-08-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Klien menyetujui pembayaran faktur sebesar IDR 15390000\", \"currency\": \"IDR\"}",
+  "input_tokens": 135,
+  "output_tokens": 94,
+  "batched_with": 25
+}

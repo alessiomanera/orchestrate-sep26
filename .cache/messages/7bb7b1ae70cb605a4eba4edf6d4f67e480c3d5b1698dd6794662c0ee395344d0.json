@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_06",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 1422.85,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": null,
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your next salary is reduced to EUR 1422.85.",
+    "currency": "EUR"
+  },
+  "raw_text": "{\"id\": \"message_06\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 1422.85, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": null, \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your next salary is reduced to EUR 1422.85.\", \"currency\": \"EUR\"}",
+  "input_tokens": 129,
+  "output_tokens": 144,
+  "batched_with": 25
+}

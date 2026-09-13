@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_56",
+    "kind": "confirm",
+    "target": "related_event",
+    "new_recurring_amount": null,
+    "one_time_amount": 26180,
+    "one_time_direction": "credit",
+    "effective_date": "2025-08-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "The client approved an invoice payment of ZAR 26180. Settlement is expected on 2025-08-15",
+    "currency": "ZAR"
+  },
+  "raw_text": "{\"id\": \"message_56\", \"kind\": \"confirm\", \"target\": \"related_event\", \"new_recurring_amount\": null, \"one_time_amount\": 26180, \"one_time_direction\": \"credit\", \"effective_date\": \"2025-08-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"The client approved an invoice payment of ZAR 26180. Settlement is expected on 2025-08-15\", \"currency\": \"ZAR\"}",
+  "input_tokens": 130,
+  "output_tokens": 140,
+  "batched_with": 25
+}

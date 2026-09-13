@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_156",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 38190000,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2025-11-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Gaji pertama Anda sebesar IDR 38190000 dijadwalkan pada 2025-11-15.",
+    "currency": "IDR"
+  },
+  "raw_text": "{\"id\": \"message_156\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 38190000, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2025-11-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Gaji pertama Anda sebesar IDR 38190000 dijadwalkan pada 2025-11-15.\", \"currency\": \"IDR\"}",
+  "input_tokens": 131,
+  "output_tokens": 135,
+  "batched_with": 25
+}

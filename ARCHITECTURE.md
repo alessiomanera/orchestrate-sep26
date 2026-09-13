@@ -143,16 +143,24 @@ without it: `python code/main.py --no-evidence` is both the offline fallback and
 | Property | Mechanism |
 |---|---|
 | Same input, same output | forecast, eligibility and ranking are pure Python, no model in the decision path |
-| Zero live calls on re-run | every document cached under a SHA-256 of exactly what was sent |
-| Byte-identical `output.csv` | deterministic rendering from a warm cache |
+| Zero live calls on re-run | the archive ships the extraction cache (.cache/), so a grader reproduces output.csv byte for byte with no API key and no network |
+| Byte-identical `output.csv` | deterministic rendering from the shipped warm cache (sha256 28a50da9...) |
 | Sampling pinned | temperature 0 on every call |
 | No wall-clock dependence | every request is answered as of its own `request_date`, never `today` |
 | No third-party drift | the whole solution imports only the Python standard library |
 
-**What is not guaranteed, stated plainly.** *Which model* reads a given document is not
-deterministic. The provider's free tier caps `generateContent` at 20 requests per day per model,
-so the run walks a fallback chain when its head is exhausted. Where a document lands in that
-chain depends on remaining quota, which is wall-clock state outside our control.
+**The extraction cache ships with the archive.** Because `code.zip` is assembled from
+git-tracked files, `.cache/` is tracked in git. A grader can extract the archive, run the full
+normal pipeline with only `dataset/` present and no `.env` file, and reproduce `output.csv`
+byte for byte with zero live API calls. Regenerating the extraction cache from scratch does
+require a `GEMINI_API_KEY` and is subject to the provider's 20-request-per-day free-tier cap
+per model.
+
+**What is not guaranteed, stated plainly.** If regenerating the cache from scratch, *which model*
+reads a given document is not deterministic. The provider's free tier caps `generateContent` at 20
+requests per day per model, so the run walks a fallback chain when its head is exhausted. Where a
+document lands in that chain depends on remaining quota, which is wall-clock state outside our
+control.
 
 This is not hypothetical. Measured from the cache, the configured head `gemini-3.8-flash`
 answered **zero** of the 231 documents; every one was served by a fallback. `usage_report.md`
@@ -246,7 +254,8 @@ of 25 labelled rows.
 | `python code/main.py --no-evidence` | the pipeline runs correctly with the model layer off |
 
 The gates run before every archive build, and the archive is built from `git ls-files`, so an
-ignored file cannot enter it even by mistake.
+ignored file cannot enter it even by mistake. The extraction cache (`.cache/`) is git-tracked and
+ships inside `code.zip`, allowing offline, byte-identical reproduction of `output.csv` without API keys.
 
 ### Output specification validator (verify_output.py)
 

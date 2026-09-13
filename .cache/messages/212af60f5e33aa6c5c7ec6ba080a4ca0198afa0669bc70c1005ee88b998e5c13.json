@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_35",
+    "kind": "confirm",
+    "target": "recurring_expense",
+    "new_recurring_amount": null,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2026-07-24",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your property maintenance payment was received on 24 July 2026.",
+    "currency": "INR"
+  },
+  "raw_text": "{\"id\": \"message_35\", \"kind\": \"confirm\", \"target\": \"recurring_expense\", \"new_recurring_amount\": null, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2026-07-24\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your property maintenance payment was received on 24 July 2026.\", \"currency\": \"INR\"}",
+  "input_tokens": 131,
+  "output_tokens": 139,
+  "batched_with": 25
+}

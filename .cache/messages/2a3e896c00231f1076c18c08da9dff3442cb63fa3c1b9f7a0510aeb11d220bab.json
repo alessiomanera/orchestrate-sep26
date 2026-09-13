@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_26",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 2988,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2026-07-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your monthly salary has increased to USD 2988.",
+    "currency": "USD"
+  },
+  "raw_text": "{\"id\": \"message_26\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 2988, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2026-07-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your monthly salary has increased to USD 2988.\", \"currency\": \"USD\"}",
+  "input_tokens": 131,
+  "output_tokens": 139,
+  "batched_with": 25
+}

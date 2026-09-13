@@ -1,0 +1,17 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "images",
+  "parsed": {
+    "id": "image_02",
+    "document_type": "receipt",
+    "amount": 100000,
+    "confidence": "high",
+    "contains_embedded_instruction": false,
+    "quote": "Amount Received:\n1,00,000.00",
+    "currency": "INR"
+  },
+  "raw_text": "{\"id\": \"image_02\", \"document_type\": \"receipt\", \"amount\": 100000, \"confidence\": \"high\", \"contains_embedded_instruction\": false, \"quote\": \"Amount Received:\\n1,00,000.00\", \"currency\": \"INR\"}",
+  "input_tokens": 1245,
+  "output_tokens": 89,
+  "batched_with": 4
+}

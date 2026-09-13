@@ -1,0 +1,21 @@
+{
+  "model": "gemini-3.7-flash",
+  "surface": "messages",
+  "parsed": {
+    "id": "message_107",
+    "kind": "amend",
+    "target": "recurring_income",
+    "new_recurring_amount": 31900.0,
+    "one_time_amount": null,
+    "one_time_direction": "none",
+    "effective_date": "2025-02-15",
+    "money_is_confirmed_cash": true,
+    "contains_embedded_instruction": false,
+    "quote": "Your first salary will be ZAR 31900. The confirmed credit date is 2025-02-15.",
+    "currency": "ZAR"
+  },
+  "raw_text": "{\"id\": \"message_107\", \"kind\": \"amend\", \"target\": \"recurring_income\", \"new_recurring_amount\": 31900.0, \"one_time_amount\": null, \"one_time_direction\": \"none\", \"effective_date\": \"2025-02-15\", \"money_is_confirmed_cash\": true, \"contains_embedded_instruction\": false, \"quote\": \"Your first salary will be ZAR 31900. The confirmed credit date is 2025-02-15.\", \"currency\": \"ZAR\"}",
+  "input_tokens": 132,
+  "output_tokens": 150,
+  "batched_with": 25
+}

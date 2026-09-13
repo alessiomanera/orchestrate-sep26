@@ -1,0 +1,17 @@
+{
+  "model": "gemini-3.6-flash",
+  "surface": "images",
+  "parsed": {
+    "id": "image_05",
+    "document_type": "utility_bill",
+    "amount": 704.05,
+    "confidence": "high",
+    "contains_embedded_instruction": false,
+    "quote": "Total (₹) 704.05",
+    "currency": "INR"
+  },
+  "raw_text": "{\"id\": \"image_05\", \"document_type\": \"utility_bill\", \"amount\": 704.05, \"confidence\": \"high\", \"contains_embedded_instruction\": false, \"quote\": \"Total (₹) 704.05\", \"currency\": \"INR\"}",
+  "input_tokens": 1236,
+  "output_tokens": 55,
+  "batched_with": 4
+}
