@@ -2,9 +2,15 @@
 
 ## HANDOFF, read this first
 
-Written 2026-09-12 ~21:30 IST for a session with no memory of the one that wrote it.
-Deadline 2026-09-13T18:00:00+05:30, about 20.5 hours out. Everything below is measured, not
-remembered: re-run `.venv\Scripts\python.exe code/evaluation/main.py` to reproduce it.
+Written for a session with no memory of the one that wrote it. Everything below is
+measured, not remembered: re-run `.venv\Scripts\python.exe code/evaluation/main.py` to
+reproduce the scores.
+
+**Deadline 2026-09-13T18:00:00+05:30. Compute the time left yourself before planning
+anything, this file does not know when you are reading it.** AGENTS.md section 3 requires it
+at session start anyway. The hard rule: **stop new work and package the moment 2 hours
+remain**, whatever is in progress. A working pipeline that gets submitted beats a better one
+that does not.
 
 ### Score, fresh run against the 25 solved rows
 
@@ -194,18 +200,22 @@ Step 1 comes first regardless, because every later column reads the forecast it 
 
 ## 3. Time budget
 
-| Block | Hours |
-|---|---|
-| Remaining as of 2026-09-12 20:51 IST | 21.1h |
-| Steps 1-7 above (build) | 15.5h |
-| Step 8, rest block | 1.5h |
-| Step 9, buffer | 2.0h |
-| Submit floor, packaging already counted in step 7 | 1.0h |
-| Total planned | 20.0h, fits inside 21.1h with 1.1h slack |
+This section carried a fixed hour-by-hour plan written on 2026-09-12. It went stale
+within a day, which is the argument against writing one down at all. Budget against the
+deadline you compute at session start instead.
 
-Rule: stop new work and start Step 7 (packaging) the moment 2 hours remain before the
-deadline, whatever step is in progress. Partial credit on a working pipeline beats a better
-pipeline that never gets zipped.
+What is left is small and can be ordered by value rather than by clock:
+
+| Block | Rough cost | Worth |
+|---|---|---|
+| `recommended_payment_method` in `classify` | the bulk of a session | up to ~10 points, moves `payment_plan` with it |
+| `spending_changes_needed`, the last placeholder | less | capped at ~2 points overall |
+| Packaging and submitting | under 30 minutes, already rehearsed end to end | everything |
+
+Rule, unchanged and the only one that matters: **stop new work and package the moment 2
+hours remain**, whatever is in progress. Partial credit on a working pipeline beats a better
+pipeline that never gets zipped. The packaging path has been run for real (D14), so it is
+minutes, not an unknown.
 
 ## 4. Submission deliverables
 
