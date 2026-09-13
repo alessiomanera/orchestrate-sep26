@@ -100,6 +100,8 @@ def predict(request: dict, evidence: Evidence) -> dict:
         explanation += f" Chosen option {plan.option_id}: {plan.payment_count} payments."
     elif plan is not None and plan.method == "partial_payment":
         explanation += " A two-part split completes it by the desired date at no financing cost."
+    elif status == "affordable_later" and method == "not_recommended":
+        explanation += " Waiting is not offered because this user does not accept full payment."
 
     return {
         "request_id": request["request_id"],

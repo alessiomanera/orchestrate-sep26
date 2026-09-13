@@ -336,13 +336,32 @@ def classify(
     #    carrying a single full payment on the first safe date (request_03, 04,
     #    08, 13, 18 and 23 all do), so it is built here rather than left as None
     #    and rendered as "none".
-    if earliest is not None:
+    #
+    #    Waiting is eligible only when the user actually accepts full_payment.
+    #    problem_statement.md gates it on exactly that ("wait is eligible when
+    #    full payment becomes safe later and the user accepts full_payment"),
+    #    and all six solved wait rows go to users whose accepted methods contain
+    #    full_payment. Telling a user who will only ever pay in instalments to
+    #    wait for a lump sum recommends the one thing they have already declined.
+    if earliest is not None and "full_payment" in methods:
         return "affordable_later", "wait", Plan(
             method="wait",
             payments=[(earliest, requested_amount)],
             total_cost=requested_amount,
         )
 
-    # 5. A safe full payment never happens inside the horizon and no eligible
+    # 5. Capacity arrives, but every method that could use it is one this user
+    #    rejects, so not_recommended is the fallback the spec names. The status
+    #    still reports capacity, not preference: affordable_later is defined as
+    #    "the full amount is expected to become safe later" with no acceptance
+    #    clause, unlike affordable_now, which spells one out. That asymmetry is
+    #    deliberate, and the samples back it: across all 25 solved rows
+    #    not_affordable occurs only where earliest_date_for_full_payment is
+    #    empty, so claiming it here while still emitting a date would contradict
+    #    the column beside it.
+    if earliest is not None:
+        return "affordable_later", "not_recommended", None
+
+    # 6. A safe full payment never happens inside the horizon and no eligible
     #    plan carries it. Do not proceed.
     return "not_affordable", "not_recommended", None
