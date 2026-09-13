@@ -115,15 +115,30 @@ def run_gates(root: Path, files: list[str]) -> bool:
     return all(results)
 
 
+# AGENTS.md section 6.5 requires code.zip to contain "evaluation/usage_report.md".
+# The report lives at code/evaluation/usage_report.md in the repo, because that is
+# where the code that writes it lives, so a grader resolving the contract path
+# against the archive root would not find it. The archive therefore carries it at
+# both paths: the repo path, so the tree matches the checkout, and the contract
+# path, so the literal requirement resolves. One 3 KB file, duplicated, rather
+# than a repo layout bent around a packaging detail.
+REPO_USAGE_REPORT = "code/evaluation/usage_report.md"
+CONTRACT_USAGE_REPORT = "evaluation/usage_report.md"
+
+
 def build(root: Path, files: list[str]) -> Path:
     target = root / "code.zip"
     shipped = [f for f in files if not f.startswith(EXCLUDE_PREFIXES)]
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
         for name in shipped:
             archive.write(root / name, name)
+        report = root / REPO_USAGE_REPORT
+        if report.is_file() and CONTRACT_USAGE_REPORT not in shipped:
+            archive.write(report, CONTRACT_USAGE_REPORT)
     size_kb = target.stat().st_size / 1024
     print(f"\nBuilt {target.name}: {len(shipped)} files, {size_kb:.0f} KB")
     print(f"Excluded {len(files) - len(shipped)} tracked dataset files, the organizers supply those.")
+    print(f"Also placed the usage report at {CONTRACT_USAGE_REPORT} (AGENTS.md section 6.5).")
     return target
 
 
