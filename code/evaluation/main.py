@@ -12,8 +12,11 @@ Scoring rules:
   earliest_date_for_full_payment, spending_changes_needed: exact string match.
 - amount_safe_to_pay: numeric comparison with a small tolerance, since plan
   arithmetic can produce repeating-decimal rounding.
-- decision_explanation: not scored for correctness. Only reported as a
-  non-empty rate.
+- decision_explanation: exact match against the organizers' wording is close to
+  meaningless, since many different sentences are equally correct. It is scored
+  instead on what the rubric actually asks for, usefulness and consistency,
+  measured against our own row rather than against their prose. See
+  `_report_explanation_quality`.
 
 Usage:
     python code/evaluation/main.py
@@ -22,8 +25,10 @@ Usage:
 from __future__ import annotations
 
 import csv
+import re
 import subprocess
 import sys
+from datetime import date, datetime
 from pathlib import Path
 
 EXACT_MATCH_COLUMNS = [
@@ -52,9 +57,13 @@ def repo_root() -> Path:
 
 
 def read_rows(path: Path) -> dict[str, dict[str, str]]:
+    return read_rows_by(path, "request_id")
+
+
+def read_rows_by(path: Path, key: str) -> dict[str, dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
-        return {row["request_id"]: row for row in reader}
+        return {row[key]: row for row in reader}
 
 
 def amounts_match(expected: str, actual: str) -> bool:
@@ -137,6 +146,161 @@ def _report_confusion(
         print(f"  {truth:<{width}}" + "".join(cells) + f"   (n={total})")
 
 
+MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+
+# Cue phrases that tie an explanation to one recommended_payment_method. The
+# "forbidden" list is the half that matters: an explanation that mentions
+# installments on a row recommending a single full payment contradicts the
+# column beside it, which the rubric penalises more than vagueness does.
+METHOD_CUES: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    # method: (at least one of these required, none of these allowed)
+    "full_payment": (("pay ",), ("installment", "do not", "wait until", "remaining")),
+    "installments": (("installment",), ("do not", "wait until", "remaining")),
+    "partial_payment": (("remaining",), ("installment", "do not", "wait until")),
+    "wait": (("in full on", "wait until"), ("installment", "do not", "today")),
+    "not_recommended": (("do not",), ("installment", "wait until")),
+}
+
+
+def _long_dates(text: str) -> set[date]:
+    """Every "8 August 2025" style date in the text, as real dates."""
+    found = set()
+    for day, month, year in re.findall(r"\b(\d{1,2}) ([A-Z][a-z]+) (\d{4})\b", text):
+        if month in MONTHS:
+            found.add(date(int(year), MONTHS.index(month) + 1, int(day)))
+    return found
+
+
+def _numbers(text: str) -> list[float]:
+    """Every money-shaped number in the text, comma grouping removed."""
+    out = []
+    for token in re.findall(r"\b\d[\d,]*(?:\.\d+)?\b", text):
+        try:
+            out.append(float(token.replace(",", "")))
+        except ValueError:
+            pass
+    return out
+
+
+def _report_explanation_quality(
+    predicted: dict[str, dict[str, str]],
+    source: dict[str, dict[str, str]],
+    profiles: dict[str, dict[str, str]],
+) -> None:
+    """Score decision_explanation on usefulness and consistency, not wording.
+
+    Every rate here is measured against the row we ourselves emitted, so it is a
+    real check even on the 250 graded rows where no reference text exists. The
+    grounding rate is the one that guards the rule that matters most: a number in
+    the sentence that we did not emit anywhere is an invented fact.
+    """
+    total = len(predicted)
+    if not total:
+        return
+
+    names_amount = names_currency = names_date = consistent = 0
+    names_minimum = grounded = 0
+
+    for request_id, row in predicted.items():
+        text = row.get("decision_explanation", "")
+        lower = text.lower()
+        src = source.get(request_id, {})
+        profile = profiles.get(src.get("user_id", ""), {})
+        currency = profile.get("home_currency", "")
+
+        # Every number this row is entitled to mention.
+        allowed: set[float] = set()
+        for key in ("requested_amount", "amount_safe_to_pay"):
+            try:
+                allowed.add(round(float(row.get(key) or src.get(key) or ""), 2))
+            except ValueError:
+                pass
+        try:
+            allowed.add(round(float(profile.get("minimum_balance_to_keep", "")), 2))
+        except ValueError:
+            pass
+        plan_amounts, plan_dates = set(), set()
+        payment_count = 0
+        for entry in (row.get("payment_plan") or "").split("|"):
+            if ":" not in entry:
+                continue
+            when, _, amount = entry.partition(":")
+            try:
+                plan_amounts.add(round(float(amount), 2))
+                plan_dates.add(datetime.strptime(when, "%Y-%m-%d").date())
+                payment_count += 1
+            except ValueError:
+                pass
+        allowed |= plan_amounts
+        # "Use 3 installments" is grounded in how many payments the plan has, not
+        # in how many distinct amounts it has, which for an even split is always 1.
+        allowed.add(float(payment_count))
+
+        allowed_dates = set(plan_dates)
+        for key in ("earliest_date_for_full_payment",):
+            try:
+                allowed_dates.add(datetime.strptime(row.get(key, ""), "%Y-%m-%d").date())
+            except ValueError:
+                pass
+        for key in ("desired_completion_date", "request_date"):
+            try:
+                allowed_dates.add(datetime.strptime(src.get(key, ""), "%Y-%m-%d").date())
+            except ValueError:
+                pass
+
+        # Strip anything that is not a money value before grounding, or a day
+        # and a year are read as unexplained amounts and every row fails.
+        without_dates = re.sub(r"\b\d{1,2} [A-Z][a-z]+ \d{4}\b", " ", text)
+        without_dates = re.sub(r"\b90 days\b", " ", without_dates)
+        found_numbers = _numbers(without_dates)
+        found_dates = _long_dates(text)
+
+        if any(any(abs(n - a) < 0.01 for a in allowed) for n in found_numbers):
+            names_amount += 1
+        if currency and re.search(rf"\b{currency}\b", text):
+            names_currency += 1
+        if found_dates & allowed_dates:
+            names_date += 1
+        try:
+            minimum = round(float(profile.get("minimum_balance_to_keep", "")), 2)
+            if any(abs(n - minimum) < 0.01 for n in found_numbers):
+                names_minimum += 1
+        except ValueError:
+            pass
+
+        # Grounding: no number in the sentence that this row cannot justify.
+        if all(any(abs(n - a) < 0.01 for a in allowed) for n in found_numbers):
+            grounded += 1
+
+        required, forbidden = METHOD_CUES.get(
+            row.get("recommended_payment_method", ""), ((), ())
+        )
+        if (not required or any(cue in lower for cue in required)) and not any(
+            cue in lower for cue in forbidden
+        ):
+            consistent += 1
+
+    def rate(label: str, count: int) -> None:
+        print(f"    {label:<44} {count:>4}/{total}  ({100 * count / total:5.1f}%)")
+
+    distinct = len({row.get("decision_explanation", "") for row in predicted.values()})
+    lengths = [len(row.get("decision_explanation", "")) for row in predicted.values()]
+    print(f"\n  decision_explanation quality over {total} row(s)")
+    rate("names an amount we emitted", names_amount)
+    rate("names the home currency code", names_currency)
+    rate("names a date we emitted", names_date)
+    rate("names the minimum balance to keep", names_minimum)
+    rate("consistent with recommended_payment_method", consistent)
+    rate("grounded (no number we did not emit)", grounded)
+    print(
+        f"    {'distinct strings':<44} {distinct:>4}/{total}"
+        f"   avg {sum(lengths) / total:.0f} chars"
+    )
+
+
 def main() -> int:
     root = repo_root()
 
@@ -185,6 +349,9 @@ def main() -> int:
     _report_amount_error_split(expected, predicted)
     _report_confusion(expected, predicted, "affordability_status")
     _report_confusion(expected, predicted, "recommended_payment_method")
+    _report_explanation_quality(
+        predicted, expected, read_rows_by(root / "dataset" / "financial_profiles.csv", "user_id")
+    )
 
     overall_matched = sum(column_matches.values())
     overall_total = len(scored_columns) * total

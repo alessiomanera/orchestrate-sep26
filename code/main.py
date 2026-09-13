@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from evidence import EMPTY_EVIDENCE, Evidence, collect_evidence
@@ -33,7 +33,7 @@ from financial_state import _load_profiles
 from financial_state import amount_safe_to_pay as compute_amount_safe_to_pay
 from financial_state import earliest_date_for_full_payment as compute_earliest_date
 from financial_state import reconstruct_state
-from planning import classify, format_payment_plan
+from planning import Plan, classify, format_payment_plan
 from usage import write_usage_report
 
 REQUIRED_COLUMNS = [
@@ -53,12 +53,139 @@ PLACEHOLDER = {
     "spending_changes_needed": "none",
 }
 
-EXPLANATION = {
-    "affordable_now": "The full amount clears the minimum balance on the request date.",
-    "affordable_with_plan": "The full amount is not safe today, but an eligible plan completes it.",
-    "affordable_later": "No eligible plan completes this now; capacity arrives later in the forecast.",
-    "not_affordable": "No safe full payment occurs within the forecast and no eligible plan carries it.",
-}
+MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+
+
+def _money(currency: str, value: float) -> str:
+    """"EUR 1,574.40". Comma grouping, and decimals only when there are any.
+
+    Read off the solved rows, which write 25,256 and 68,432 without decimals but
+    620.40, 23.50 and 15,952,906.67 with exactly two. Note this is the grammar of
+    the prose column only: payment_plan uses no grouping and
+    earliest_date_for_full_payment stays ISO, so the three are formatted apart
+    rather than sharing one helper.
+    """
+    rounded = round(value, 2)
+    body = f"{int(rounded):,}" if rounded == int(rounded) else f"{rounded:,.2f}"
+    return f"{currency} {body}".strip()
+
+
+def _long_date(value: date) -> str:
+    """"15 November 2019". The solved explanations use long form even though
+    payment_plan on the same row uses ISO, so the two deliberately differ.
+    """
+    return f"{value.day} {MONTHS[value.month - 1]} {value.year}"
+
+
+def _parse_date(value: str) -> date | None:
+    """An optional ISO date from the request row, or None when it is blank."""
+    try:
+        return datetime.strptime((value or "").strip()[:10], "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _plan_entries(plan: Plan | None) -> list[tuple[date, float]]:
+    return sorted(plan.payments, key=lambda p: p[0]) if plan and plan.payments else []
+
+
+def build_explanation(
+    status: str,
+    method: str,
+    plan: Plan | None,
+    *,
+    currency: str,
+    minimum: float,
+    requested: float,
+    earliest: date | None,
+    deadline: date | None,
+) -> str:
+    """A grounded two-sentence explanation: the action, then the safety reason.
+
+    Every number and date here is one this row actually emits, or is read
+    directly from the profile or the request. Nothing is inferred and nothing is
+    estimated, so the sentence can never contradict the seven columns beside it.
+    Where a value is unknown the sentence says less rather than guessing, which
+    is why several branches drop their second sentence instead of inventing a
+    reason.
+
+    Shape derived from all 25 solved rows, not from a sample of them: sentence
+    one names the recommended action with its amount and date, sentence two says
+    what the minimum balance does under that plan.
+    """
+    entries = _plan_entries(plan)
+    floor = f"This leaves at least {_money(currency, minimum)} available."
+
+    if method == "full_payment":
+        # affordable_now and the near-miss branch both pay the full amount on the
+        # request date, so they read the same. We emit spending_changes_needed as
+        # "none", so no spending change is ever claimed here.
+        return (
+            f"Pay {_money(currency, requested)} today. This leaves at least "
+            f"{_money(currency, minimum)} available over the next 90 days."
+        )
+
+    if method == "installments" and entries:
+        amounts = {round(a, 2) for _, a in entries}
+        start = _long_date(entries[0][0])
+        if len(amounts) == 1:
+            head = (
+                f"Use {len(entries)} installments of "
+                f"{_money(currency, entries[0][1])}, starting {start}."
+            )
+        else:
+            total = sum(a for _, a in entries)
+            head = (
+                f"Use {len(entries)} installments totalling "
+                f"{_money(currency, total)}, starting {start}."
+            )
+        return f"{head} {floor}"
+
+    if method == "partial_payment" and len(entries) == 2:
+        return (
+            f"Pay {_money(currency, entries[0][1])} today and the remaining "
+            f"{_money(currency, entries[1][1])} on {_long_date(entries[1][0])}. "
+            f"This completes the full request and keeps the "
+            f"{_money(currency, minimum)} minimum protected."
+        )
+
+    if method == "wait" and entries:
+        return (
+            f"Pay {_money(currency, requested)} in full on "
+            f"{_long_date(entries[0][0])}. Paying earlier would take the balance "
+            f"below the {_money(currency, minimum)} minimum."
+        )
+
+    if method == "not_recommended":
+        if earliest is not None:
+            # Capacity does arrive, so it would be false to say no option keeps
+            # the minimum safe. The blocker is the user's stated preference.
+            return (
+                f"Do not proceed with the {_money(currency, requested)} request. "
+                f"The full amount would be safe from {_long_date(earliest)}, but "
+                f"full payment is not a method this user accepts."
+            )
+        if deadline is not None:
+            return (
+                f"Do not make this payment by {_long_date(deadline)}. None of the "
+                f"available options keeps the {_money(currency, minimum)} minimum "
+                f"protected."
+            )
+        return (
+            f"Do not proceed with the {_money(currency, requested)} request. The "
+            f"full amount cannot be completed safely within 90 days while keeping "
+            f"the {_money(currency, minimum)} minimum protected."
+        )
+
+    # No plan was built for a method that needs one. Say the little that is known
+    # rather than describe a schedule that does not exist.
+    return (
+        f"No safe plan completes the {_money(currency, requested)} request while "
+        f"keeping the {_money(currency, minimum)} minimum protected."
+    )
 
 
 def _format_amount(value: float) -> str:
@@ -95,13 +222,16 @@ def predict(request: dict, evidence: Evidence) -> dict:
     earliest = compute_earliest_date(state, requested_amount)
     status, method, plan = classify(request, profile, state, requested_amount)
 
-    explanation = EXPLANATION[status]
-    if plan is not None and plan.method == "installments":
-        explanation += f" Chosen option {plan.option_id}: {plan.payment_count} payments."
-    elif plan is not None and plan.method == "partial_payment":
-        explanation += " A two-part split completes it by the desired date at no financing cost."
-    elif status == "affordable_later" and method == "not_recommended":
-        explanation += " Waiting is not offered because this user does not accept full payment."
+    explanation = build_explanation(
+        status,
+        method,
+        plan,
+        currency=profile.get("home_currency", ""),
+        minimum=float(profile["minimum_balance_to_keep"]),
+        requested=requested_amount,
+        earliest=earliest,
+        deadline=_parse_date(request.get("desired_completion_date", "")),
+    )
 
     return {
         "request_id": request["request_id"],
