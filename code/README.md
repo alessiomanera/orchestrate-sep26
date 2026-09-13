@@ -38,9 +38,28 @@ python code/main.py                  # dataset/requests.csv  -> output.csv
 python code/main.py --sample         # the 25 solved rows    -> code/evaluation/sample_output.csv
 python code/main.py --no-evidence    # ablation: ledger only, no model calls, no key needed
 python code/evaluation/main.py       # self-score against the 25 solved rows
-python code/tests/test_evidence_applier.py
 python code/package_submission.py --check    # submission gates
 ```
+
+### Tests
+
+The tests are plain scripts with a `__main__` block, not a pytest suite, so they need no test
+runner and no third-party package. Run all three with the interpreter directly:
+
+```bash
+python code/tests/test_evidence_applier.py     # 16 checks
+python code/tests/test_income_recurrence.py    #  5 checks
+python code/tests/test_payment_plan.py         #  8 checks
+```
+
+Each prints `N/N passed` and exits non-zero on failure, so a runner can chain them:
+
+```bash
+for t in code/tests/test_*.py; do python "$t" || exit 1; done      # bash
+```
+
+`pytest code/tests` does **not** work and is not meant to: pytest is deliberately not a
+dependency of this submission. 29 checks, no key and no network required.
 
 `--no-evidence` runs the whole pipeline with the model layer switched off. It needs no key and
 no network, which makes it both the offline fallback and the control arm when measuring what
@@ -91,7 +110,20 @@ be recorded as a successful one.
 
 ## Status
 
-As of 2026-09-12, `amount_safe_to_pay` and `earliest_date_for_full_payment` are produced by the
-forecast and the evidence layer. `affordability_status`, `recommended_payment_method`,
-`payment_plan` and `spending_changes_needed` are still safe placeholders: the eligibility filter
-and plan ranking are the next step. `ROADMAP.md` tracks what remains.
+All eight output columns are produced for all 250 rows of `dataset/requests.csv`.
+
+| Column | Source |
+|---|---|
+| `amount_safe_to_pay` | 90-day forecast |
+| `affordability_status` | eligibility filter and plan ranking |
+| `recommended_payment_method` | eligibility filter and plan ranking |
+| `payment_plan` | plan grammar read off the solved rows |
+| `earliest_date_for_full_payment` | forecast, independent of payment preferences |
+| `spending_changes_needed` | the one remaining placeholder, a constant `none` |
+
+`spending_changes_needed` is left at `none` deliberately rather than for lack of time. The
+selector needs the shortfall between `amount_safe_to_pay` and `requested_amount`, and on the
+solved rows that shortfall is the pipeline's least accurate quantity, so a selector driven by it
+would be choosing events from a number it cannot yet justify. `none` is a valid value under the
+output contract and is the honest one until the forecast supports better. `ROADMAP.md` tracks
+what remains.
