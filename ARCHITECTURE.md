@@ -172,7 +172,25 @@ The distinction worth holding: the *pipeline* is reproducible, the *model select
 the cache is warm the second point stops mattering, which is why cache hits are reported rather
 than dropped.
 
+### Auditability of the shipped extraction cache
+
+Shipping extraction results carries the risk of making an incorrect extraction invisible. To make every model extraction auditable, each cache file stores the raw model response (`raw_text`), the structured output (`parsed`), and an exact verbatim snippet (`quote`) from the original document supporting the extraction. A reviewer can inspect any file under `.cache/images/` or `.cache/messages/` to trace every model-derived number or fact back to its source document.
+
+Measured directly from the 231 files in `.cache/`:
+
+| Dimension | Measured count in `.cache/` | Pipeline handling |
+|---|---|---|
+| Image confidence levels | 15 high, 1 low | 15 high-confidence extractions are applied; the single low-confidence image is withheld |
+| Message confidence levels | 215 not recorded | The message classification schema does not record a confidence field; all 215 messages are parsed into structured facts |
+| Message kind breakdown | 91 amend, 78 confirm, 21 clarify, 14 cancel, 7 delay, 4 irrelevant | 211 messages are mapped into typed facts; 4 irrelevant messages have no financial effect |
+| Embedded instructions flagged | 0 of 16 images, 0 of 215 messages (`contains_embedded_instruction: false`) | Embedded instructions are treated as untrusted data and never as instructions, satisfying the problem statement requirement |
+| Verbatim source grounding (`quote`) | 16 of 16 images (100%), 215 of 215 messages (100%) | Every single extraction anchors its extracted amounts or dates directly to quoted document text |
+| Unresolved blank amounts | 1 image (`image_04` -> `event_1700`) | `image_04` carries `confidence: "low"` and `amount: null` (quote: "Item Bill\nINR 2854.00"). The pipeline marks `event_1700` as unread and leaves its amount blank. Per AGENTS.md section 6.1 and `_row_amount()`, unresolved rows remain unknown and are skipped rather than silently assumed to be zero |
+
+Every cache file pairs `raw_text`, `quote`, and `parsed` in a single JSON document. A reviewer does not have to guess what the model returned or what text it read: open any cache file to inspect the exact prompt input, the provider response, and the structured schema fields. No model extraction is opaque, and every evidence input flowing into `output.csv` is fully traceable to its underlying file.
+
 ---
+
 
 ## 5. Failure and abstention behaviour
 
