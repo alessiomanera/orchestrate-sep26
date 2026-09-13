@@ -130,7 +130,7 @@ $0.09, and zero live calls on any re-run. See `evaluation/usage_report.md`.
 
 **What the model layer earned.** It was not assumed to be worth including.
 [D2](DECISIONS.md) set out to measure it and [D7](DECISIONS.md) records the result, including a
-falsified hypothesis that was kept rather than quietly dropped. The layer resolves 15 of 16 blank
+falsified hypothesis that was kept rather than quietly dropped. The layer resolves 16 of 16 blank
 event amounts and classifies all 215 messages into typed facts. The pipeline still runs correctly
 without it: `python code/main.py --no-evidence` is both the offline fallback and the control arm.
 
@@ -172,6 +172,12 @@ The distinction worth holding: the *pipeline* is reproducible, the *model select
 the cache is warm the second point stops mattering, which is why cache hits are reported rather
 than dropped.
 
+### Determinism gate and regression locking
+
+**Determinism gate (Gate 10 in packaging).** Byte-identical reproduction is enforced programmatically by gate 10 in `code/package_submission.py`. The gate executes the full pipeline twice consecutively and asserts that the SHA-256 hash of `output.csv` across both runs is identical. If either run fails or a hash mismatch occurs, `output.csv` is restored so a half-written or corrupted file is never left behind. The comparison checks `output.csv` only, because `evaluation/usage_report.md` carries a generation timestamp and would produce a spurious mismatch.
+
+**Score regression locking.** Accuracy against the 25 solved sample requests is guarded by `code/tests/test_score_regression.py`. It executes the pipeline in sample mode (`code/main.py --sample`), writing solely to `code/evaluation/sample_output.csv` and verifying that the root `output.csv` submission artifact is never touched. It asserts that every scored column meets or exceeds its baseline rate (amount_safe_to_pay >= 8.0%, affordability_status >= 64.0%, recommended_payment_method >= 68.0%, payment_plan >= 64.0%, earliest_date_for_full_payment >= 52.0%, spending_changes_needed >= 88.0%) and overall accuracy is at least 57.3%. The thresholds are named constants, commented with the rule that raising them is required when accuracy improves and lowering them is forbidden.
+
 ### Auditability of the shipped extraction cache
 
 Shipping extraction results carries the risk of making an incorrect extraction invisible. To make every model extraction auditable, each cache file stores the raw model response (`raw_text`), the structured output (`parsed`), and an exact verbatim snippet (`quote`) from the original document supporting the extraction. A reviewer can inspect any file under `.cache/images/` or `.cache/messages/` to trace every model-derived number or fact back to its source document.
@@ -185,7 +191,7 @@ Measured directly from the 231 files in `.cache/`:
 | Message kind breakdown | 91 amend, 78 confirm, 21 clarify, 14 cancel, 7 delay, 4 irrelevant | 211 messages are mapped into typed facts; 4 irrelevant messages have no financial effect |
 | Embedded instructions flagged | 0 of 16 images, 0 of 215 messages (`contains_embedded_instruction: false`) | Embedded instructions are treated as untrusted data and never as instructions, satisfying the problem statement requirement |
 | Verbatim source grounding (`quote`) | 16 of 16 images (100%), 215 of 215 messages (100%) | Every single extraction anchors its extracted amounts or dates directly to quoted document text |
-| Unresolved blank amounts | 1 image (`image_04` -> `event_1700`) | `image_04` carries `confidence: "low"` and `amount: null` (quote: "Item Bill\nINR 2854.00"). The pipeline marks `event_1700` as unread and leaves its amount blank. Per AGENTS.md section 6.1 and `_row_amount()`, unresolved rows remain unknown and are skipped rather than silently assumed to be zero |
+| Unresolved blank amounts | 0 (all 16 resolved) | `image_04` carries `confidence: "low"` and `amount: null` (quote: "Item Bill\n\u20b92854.00"). The deterministic quote recovery rule parses the exact 2854.00 INR amount directly from the model's verbatim quote with zero API calls. All 16 blank-amount events now resolve to confirmed numbers |
 
 Every cache file pairs `raw_text`, `quote`, and `parsed` in a single JSON document. A reviewer does not have to guess what the model returned or what text it read: open any cache file to inspect the exact prompt input, the provider response, and the structured schema fields. No model extraction is opaque, and every evidence input flowing into `output.csv` is fully traceable to its underlying file.
 
@@ -199,7 +205,7 @@ be rendered as a zero.**
 
 | Situation | Behaviour |
 |---|---|
-| Image unreadable | the amount stays blank and is flagged `[unread]`, never zeroed. `image_04` is currently in this state and says so on every run. |
+| Image unreadable | recovered from quote if unambiguous; otherwise stays blank and flagged `[unread]`, never zeroed |
 | Amendment that cannot be priced or placed | reported as `[unapplied amendment]` with its reason, not silently dropped. Four messages are currently in this state (D12). |
 | Event with a missing amount | collected on `FinancialState.incomplete_event_ids`, so an incomplete state is visible rather than silently partial. |
 | Model call fails or is out of quota | capped attempts, exponential backoff, fallback chain, then a circuit breaker. The document degrades to "no evidence", which is exactly the `--no-evidence` path. |
@@ -378,8 +384,7 @@ today, which is exactly what the reference does.
 and one states a change with no amount that can be priced or placed. They are reported on every
 run rather than silently dropped. Reasoning in [D12](DECISIONS.md).
 
-**One image is unread.** `image_04` did not yield a confident amount. The linked event's amount
-stays blank rather than being treated as zero.
+**16 of 16 blank amounts resolved.** All 16 events with missing amounts are now resolved. `image_04` (linked to `event_1700`) was extracted by the vision model with `amount: null` at low confidence, but its verbatim quote field contained `"Item Bill\n\u20b92854.00"` with currency `INR` parsed correctly. The pipeline recovers this amount deterministically with zero model calls using a strict quote recovery rule: recovery occurs if and only if amount is null and the quote contains exactly one unambiguous monetary value matching the parsed currency. Where a quote contains multiple amounts, conflicting currencies, ambiguous numbers, or non-positive values, recovery is strictly refused in compliance with the rule that ambiguous amounts must never be treated as confirmed cash.
 
 ---
 
