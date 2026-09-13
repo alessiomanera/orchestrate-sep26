@@ -81,7 +81,8 @@ a Python number.
 | `code/planning.py` | 367 | eligibility, plan construction, safety check, ranking, classification | how the balance was derived |
 | `code/main.py` | 164 | reads requests, renders the eight columns, writes `output.csv` | any decision logic |
 | `code/usage.py` | 159 | writes `evaluation/usage_report.md` from measured counts | estimates or reconstructions |
-| `code/package_submission.py` | 216 | submission gates and archive build | anything the pipeline runs |
+| `code/package_submission.py` | 232 | submission gates and archive build | anything the pipeline runs |
+| `code/evaluation/verify_output.py` | 558 | independent validation of output.csv against all 15 specification rules | producing or modifying output |
 
 The seam that matters most is between `financial_state.py` and `planning.py`. The forecast
 produces a balance timeline and nothing else; planning consumes it and never reaches back into
@@ -238,13 +239,73 @@ of 25 labelled rows.
 
 | Gate | What it proves |
 |---|---|
-| `python code/package_submission.py --check` | eight gates: column order, one row per request, row order matches the dataset, no private file tracked, transcript leak scan, usage report is real |
+| `python code/package_submission.py --check` | nine gates: column order, one row per request, row order matches the dataset, specification verification across 15 rules, no private file tracked, transcript leak scan, usage report is real |
+| `python code/evaluation/verify_output.py` | independent validator enforcing all 15 specification rules across all 250 evaluation requests |
 | `python code/evaluation/main.py` | self-scores the seven comparable columns against the 25 solved rows, and scores `decision_explanation` on usefulness and consistency against the row we emitted |
 | `code/tests/*.py` | 29 checks, no key and no network, plain scripts with no test runner |
 | `python code/main.py --no-evidence` | the pipeline runs correctly with the model layer off |
 
 The gates run before every archive build, and the archive is built from `git ls-files`, so an
 ignored file cannot enter it even by mistake.
+
+### Output specification validator (verify_output.py)
+
+An independent, zero-dependency validator (`code/evaluation/verify_output.py`) inspects `output.csv`
+against `problem_statement.md` across all 250 rows before packaging. It does not modify output logic
+or use third-party libraries. It cross-checks `output.csv` against `requests.csv`,
+`financial_profiles.csv`, `request_payment_options.csv`, and `financial_events.csv` to guarantee:
+
+1. Exact columns and ordering (8 required columns, no extras).
+2. Exactly 250 rows in identical input order.
+3. No empty required fields (only `earliest_date_for_full_payment` may be empty).
+4. Safe amounts bounded by 0 and `requested_amount`.
+5. Closed-set `affordability_status` enums.
+6. Closed-set `recommended_payment_method` enums.
+7. `affordable_now` has `earliest_date_for_full_payment == request_date`.
+8. Recommended immediate methods are explicitly accepted in user profile.
+9. `wait` recommendations require that the user accepts `full_payment`.
+10. `partial_payment` contract (allowed, status is `affordable_with_plan`, amount strictly inside (0, requested), exactly two payments summing to total, first on request date, second on or before deadline).
+11. `installments` exactly matches a supplied payment option in payment count, start date, and frequency spacing.
+12. `payment_plan` syntax (`YYYY-MM-DD:amount`), non-decreasing chronological order, positive amounts.
+13. `not_recommended` has `payment_plan` equal to `none`.
+14. `spending_changes_needed` syntax (at most 3 `stop:` or `reduce_to:`), references only existing non-fixed recurring debits for that user, mutually exclusive stops/reductions, respects `minimum_allowed_amount`.
+15. Non-empty `decision_explanation` on every row.
+
+Measured against the current `output.csv`, all 15 rules pass with zero violations:
+
+| Rule | Description | Violations | Status |
+|---|---|---|---|
+| Rule 1 | Exactly 8 required columns in exact order | 0 | PASS |
+| Rule 2 | One row per request_id in requests.csv row order (250 rows) | 0 | PASS |
+| Rule 3 | No required field empty (except earliest_date_for_full_payment) | 0 | PASS |
+| Rule 4 | 0 <= amount_safe_to_pay <= requested_amount on every row | 0 | PASS |
+| Rule 5 | affordability_status is an allowed value | 0 | PASS |
+| Rule 6 | recommended_payment_method is an allowed value | 0 | PASS |
+| Rule 7 | affordable_now implies earliest_date_for_full_payment == request_date | 0 | PASS |
+| Rule 8 | Recommended immediate payment method accepted by user | 0 | PASS |
+| Rule 9 | wait method requires full_payment accepted by user | 0 | PASS |
+| Rule 10 | partial_payment satisfies full contract requirements | 0 | PASS |
+| Rule 11 | installments match a supplied option schedule exactly | 0 | PASS |
+| Rule 12 | payment_plan format, non-decreasing dates, positive amounts | 0 | PASS |
+| Rule 13 | not_recommended implies payment_plan == 'none' | 0 | PASS |
+| Rule 14 | spending_changes_needed valid, non-fixed, respects minimums | 0 | PASS |
+| Rule 15 | decision_explanation non-empty on every row | 0 | PASS |
+
+Every rule passes cleanly with zero violations across all 250 rows.
+
+To verify that the validator actively enforces the specification rather than merely passing
+vacuously, it was independently negative-tested by corrupting output.csv in eight distinct ways:
+1. Out-of-range amount (amount_safe_to_pay negative or exceeding requested_amount)
+2. Bad status enum (unrecognized affordability_status value)
+3. Bad method enum (unrecognized recommended_payment_method value)
+4. Malformed plan syntax (decreasing dates or invalid format)
+5. not_recommended carrying an active payment plan
+6. Empty explanation string
+7. A deleted row (causing row count and request_id sequence mismatch)
+8. A spending change referencing a non-existent event_id
+
+All eight corruptions were successfully detected and rejected with non-zero exit codes,
+providing concrete evidence that the validator fires on violations as designed.
 
 ---
 

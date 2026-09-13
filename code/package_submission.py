@@ -112,6 +112,22 @@ def run_gates(root: Path, files: list[str]) -> bool:
         results.append(gate("output.csv row order matches dataset/requests.csv",
                             [r[0] for r in body] == expected))
 
+        # 6. Comprehensive specification verification across all 15 rules.
+        verify_out = subprocess.run(
+            [sys.executable, str(root / "code" / "evaluation" / "verify_output.py")],
+            capture_output=True, text=True, cwd=str(root),
+        )
+        detail = ""
+        if verify_out.returncode == 0:
+            for line in reversed(verify_out.stdout.strip().splitlines()):
+                if "Result:" in line:
+                    detail = line.split("Result:", 1)[1].strip()
+                    break
+        else:
+            detail = "specification violations found"
+        results.append(gate("output.csv passes specification verification (15 rules)",
+                            verify_out.returncode == 0, detail))
+
     return all(results)
 
 
