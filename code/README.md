@@ -44,22 +44,54 @@ python code/package_submission.py --check    # submission gates
 ### Tests
 
 The tests are plain scripts with a `__main__` block, not a pytest suite, so they need no test
-runner and no third-party package. Run all three with the interpreter directly:
-
-```bash
-python code/tests/test_evidence_applier.py     # 16 checks
-python code/tests/test_income_recurrence.py    #  5 checks
-python code/tests/test_payment_plan.py         #  8 checks
-```
-
-Each prints `N/N passed` and exits non-zero on failure, so a runner can chain them:
-
-```bash
-for t in code/tests/test_*.py; do python "$t" || exit 1; done      # bash
-```
+runner and no third-party package. They come in two tiers: a fast tier that runs in seconds,
+and one slow metamorphic suite that is kept separate on purpose.
 
 `pytest code/tests` does **not** work and is not meant to: pytest is deliberately not a
-dependency of this submission. 29 checks, no key and no network required.
+dependency of this submission. No test needs an API key or network access; the model layer is
+served entirely from the committed extraction cache.
+
+#### Fast tier (seconds)
+
+```bash
+python code/tests/test_evidence_applier.py        # 16 checks
+python code/tests/test_income_recurrence.py       #  5 checks
+python code/tests/test_payment_plan.py            #  8 checks
+python code/tests/test_evidence_quote_recovery.py #  5 checks
+python code/tests/test_score_regression.py        #  7 checks
+```
+
+41 checks in total. Each prints `N/N passed` and exits non-zero on failure, so a runner can
+chain them. Note the glob deliberately excludes the metamorphic suite:
+
+```bash
+for t in code/tests/test_*.py; do
+  case "$t" in *metamorphic*) continue;; esac
+  python "$t" || exit 1
+done                                                               # bash
+```
+
+These are the tests wired into `python code/package_submission.py --check`.
+
+#### Slow tier: metamorphic suite (run separately)
+
+```bash
+python code/tests/test_metamorphic.py    # 7 properties, about 2 min 20 s
+```
+
+It asserts seven input-output invariance properties (P1 scale invariance, P2 balance
+monotonicity, P3 expense monotonicity, P4 irrelevance invariance, P5 date translation,
+P6 boundary conditions, P7 adversarial evidence). It prints a per-property summary table and
+exits non-zero if any property is violated. See `DECISIONS.md` D18 for what each property
+asserts and why.
+
+**Why it is separate and not part of `--check`.** It re-runs the whole decision pipeline across
+many mutated copies of the dataset (every monetary value scaled by three different factors,
+balances and expenses perturbed, calendars shifted), so its cost is a large multiple of a single
+run. The submission gates are meant to be fast enough to run before every commit, so folding a
+multi-minute suite into them would discourage running them at all. The metamorphic suite is a
+pre-submission verification step instead: run it when the decision logic changes, not on every
+edit. It reads only from temporary copies of `dataset/`, which is never modified.
 
 `--no-evidence` runs the whole pipeline with the model layer switched off. It needs no key and
 no network, which makes it both the offline fallback and the control arm when measuring what
@@ -79,7 +111,7 @@ inputs. The reasoning behind that split, and every other significant choice, is 
 | `code/llm.py` | model access: REST, batching, caching, retry, token accounting |
 | `code/usage.py` | writes `code/evaluation/usage_report.md` from measured token counts |
 | `code/evaluation/main.py` | self-scoring harness against the solved sample rows |
-| `code/tests/` | tests for the evidence applier, no key or network needed |
+| `code/tests/` | fast unit and regression tests, plus the slow metamorphic suite |
 
 **The forecast.** Each request is answered as of its own `request_date`, never the system clock.
 The profile's `current_available_balance` is the starting point; pending and scheduled rows are
